@@ -50,7 +50,6 @@ describe("toPublicWidgetConfig", () => {
       "_id",
       "internalTitle",
       "structureName",
-      "authorizedDomains",
       "status",
       "filters",
       "createdAt",
@@ -58,6 +57,10 @@ describe("toPublicWidgetConfig", () => {
     ]) {
       expect(keys).not.toContain(internalKey);
     }
+  });
+
+  it("exposes the authorized domains for the frame-ancestors CSP", () => {
+    expect(toPublicWidgetConfig(config).authorizedDomains).toEqual(["exemple.org"]);
   });
 
   it("hides the description when it is not displayed", () => {

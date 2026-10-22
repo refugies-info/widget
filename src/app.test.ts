@@ -54,9 +54,9 @@ describe("GET /widgets/:publicId", () => {
     expect(response.json()).toMatchObject({
       publicId: activeConfig.publicId,
       externalTitle: "Les fiches de Bordeaux",
+      authorizedDomains: ["exemple.org"],
     });
     expect(response.json()).not.toHaveProperty("internalTitle");
-    expect(response.json()).not.toHaveProperty("authorizedDomains");
   });
 
   it("answers the same 404 for an unknown, an inactive and a malformed id", async () => {
