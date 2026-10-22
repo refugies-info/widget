@@ -1,0 +1,38 @@
+# OSV-Scanner: dependency vulnerability scanning against the OSV database.
+# - Scheduled scan: weekly + on push to main, uploads SARIF to Code Scanning.
+#   Reports all known vulnerabilities; does not block.
+# - PR scan: fails only on vulnerabilities newly introduced by the PR.
+
+name: OSV-Scanner
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "12 12 * * 1"
+
+permissions: {}
+
+jobs:
+  scan-scheduled:
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0
+    with:
+      fail-on-vuln: false
+
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0
+    with:
+      fail-on-vuln: true
+      upload-sarif: false
