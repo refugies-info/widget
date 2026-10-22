@@ -2,6 +2,13 @@
 
 Backend (Fastify) and front (Svelte) serving the embeddable widgets of refugies.info. The front serves the iframe shown on partner sites and calls this backend, which reads the widget config and its contents from MongoDB.
 
+## Git: never act without being asked
+
+- **Never run `git commit`, `git push`, `gh pr create` or `gh pr edit` on your own initiative**, even when the code is finished and the checks pass. Leave the work in the working tree and say it is ready.
+- A request to change something, including "on PR #N" or "on this branch", is **not** a request to commit or push it. Wait for an explicit "commit" / "push" / "open the PR" for the current task.
+- An approval given for one task does not carry over to the next one.
+- When asked to commit, check what is already staged first (`git diff --cached --name-only`): a commit takes the whole index.
+
 ## Scope and source of truth
 
 - This service is **read-only**: it never writes to MongoDB. Widget configs are written by the editor in the `karfur` repo (`/api/webhook/widget-config/*`, model `WidgetConfig` in `@refugies-info/mongo`).
@@ -33,4 +40,4 @@ Backend (Fastify) and front (Svelte) serving the embeddable widgets of refugies.
 ## Before committing
 
 - Commit messages follow the semantic prefixes (`feat`, `fix`, `chore`, `docs`, `refactor`, `style`, `test`).
-- Never commit, push or open a PR without an explicit request for the current task.
+- See "Git: never act without being asked" above for when you are allowed to commit.
