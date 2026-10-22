@@ -11,7 +11,7 @@ The widget configs are written by the editor of the [karfur](https://github.com/
 
 ## Status
 
-Work in progress. Only the backend skeleton exists (`GET /health`). The `WidgetConfig` schema, `GET /widgets/:publicId` and the Svelte front are not implemented yet.
+Work in progress. The backend serves `GET /health` and `GET /widgets/:publicId` (the public config of an active widget). The contents to display and the Svelte front are not implemented yet.
 
 ## Identifying a widget
 
@@ -56,6 +56,7 @@ src/
 ├── config.ts       # environment variables, validated with zod
 ├── db.ts           # MongoDB connection
 ├── server.ts       # entry point
+├── modules/        # one folder per domain object (schema, repository, presenter)
 └── routes/         # HTTP routes
 ```
 
