@@ -7,7 +7,7 @@ export interface WidgetConfigRepository {
 
 export const createWidgetConfigRepository = (db: Db): WidgetConfigRepository => ({
   findByPublicId: async (publicId) => {
-    const document = await db.collection("widgetconfigs").findOne({ publicId });
+    const document = await db.collection("widget_config").findOne({ publicId });
     return document ? widgetConfigSchema.parse(document) : null;
   },
 });

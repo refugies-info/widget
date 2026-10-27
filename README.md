@@ -4,10 +4,10 @@ Embeddable widgets of [refugies.info](https://refugies.info). A partner site emb
 
 ```
 partner site ──iframe──▶ front (Svelte) ──▶ backend (Fastify) ──▶ MongoDB
-                         /embed/:publicId     /widgets/:publicId    widgetconfigs, dispositifs
+                         /embed/:publicId     /widgets/:publicId    widget_config, dispositifs
 ```
 
-The widget configs are written by the editor of the [karfur](https://github.com/refugies-info/karfur) repo. This service only reads them.
+The widget configs are written by the editor (`playground` repo) through the [karfur](https://github.com/refugies-info/karfur) API. This service only reads them.
 
 ## Status
 
@@ -21,7 +21,7 @@ An unknown `publicId` and an `inactive` widget return the same 404. The iframe c
 
 ## Getting started
 
-Requirements: Node.js 24+, [pnpm](https://pnpm.io) and a MongoDB database holding the `widgetconfigs` collection.
+Requirements: Node.js 24+, [pnpm](https://pnpm.io) and a MongoDB database holding the `widget_config` collection.
 
 ```bash
 pnpm install

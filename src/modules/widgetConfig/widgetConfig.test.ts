@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { toPublicWidgetConfig } from "./widgetConfig.presenter.js";
 import { widgetConfigSchema } from "./widgetConfig.schema.js";
 
-// Shaped like a widgetconfigs document created by the karfur editor, internal fields included.
-// Update it when the WidgetConfig model changes in karfur.
 const widgetConfigDocument = {
   _id: "6710f2a1c3d4e5f607182930",
   publicId: "3f1c7a52-9b4e-4d6a-8c21-5e0a7b9d4f13",
@@ -30,7 +28,7 @@ const widgetConfigDocument = {
 };
 
 describe("widgetConfigSchema", () => {
-  it("accepts a document created by the karfur editor", () => {
+  it("accepts a valid widget config document", () => {
     expect(widgetConfigSchema.safeParse(widgetConfigDocument).success).toBe(true);
   });
 
@@ -66,5 +64,32 @@ describe("toPublicWidgetConfig", () => {
   it("hides the description when it is not displayed", () => {
     const hidden = toPublicWidgetConfig({ ...config, displayDescription: false });
     expect(hidden.description).toBeUndefined();
+  });
+});
+
+describe("widgetConfigSchema fields", () => {
+  const publicKeys = [
+    "publicId",
+    "type",
+    "authorizedDomains",
+    "externalTitle",
+    "description",
+    "displayDescription",
+    "pageSize",
+    "sortBy",
+    "displayShareModule",
+    "displayFilterBar",
+    "filterBarOptions",
+  ];
+  const internalKeys = ["status"];
+
+  it("classifies every schema field as public or internal", () => {
+    const classified = [...publicKeys, ...internalKeys].sort();
+    expect(Object.keys(widgetConfigSchema.shape).sort()).toEqual(classified);
+  });
+
+  it("exposes exactly the public fields", () => {
+    const config = widgetConfigSchema.parse(widgetConfigDocument);
+    expect(Object.keys(toPublicWidgetConfig(config)).sort()).toEqual([...publicKeys].sort());
   });
 });
