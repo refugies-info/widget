@@ -4,14 +4,14 @@ Embeddable widgets of [refugies.info](https://refugies.info). A partner site emb
 
 ```
 partner site ──iframe──▶ front (Svelte) ──▶ backend (Fastify) ──▶ MongoDB
-                         /embed/:publicId     /widgets/:publicId    widgetconfigs, dispositifs
+                         /embed/:publicId     /widgets/:publicId    widget_config, dispositifs
 ```
 
-The widget configs are written by the editor of the [karfur](https://github.com/refugies-info/karfur) repo. This service only reads them.
+The widget configs are written by the editor (`playground` repo) through the [karfur](https://github.com/refugies-info/karfur) API. This service only reads them.
 
 ## Status
 
-Work in progress. Only the backend skeleton exists (`GET /health`). The `WidgetConfig` schema, `GET /widgets/:publicId` and the Svelte front are not implemented yet.
+Work in progress. The backend serves `GET /health` and `GET /widgets/:publicId` (the public config of an active widget). The contents to display and the Svelte front are not implemented yet.
 
 ## Identifying a widget
 
@@ -21,7 +21,7 @@ An unknown `publicId` and an `inactive` widget return the same 404. The iframe c
 
 ## Getting started
 
-Requirements: Node.js 24+, [pnpm](https://pnpm.io) and a MongoDB database holding the `widgetconfigs` collection.
+Requirements: Node.js 24+, [pnpm](https://pnpm.io) and a MongoDB database holding the `widget_config` collection.
 
 ```bash
 pnpm install
@@ -56,6 +56,7 @@ src/
 ├── config.ts       # environment variables, validated with zod
 ├── db.ts           # MongoDB connection
 ├── server.ts       # entry point
+├── modules/        # one folder per domain object (schema, repository, presenter)
 └── routes/         # HTTP routes
 ```
 
