@@ -1,5 +1,5 @@
 import type { Document } from "mongodb";
-import type { WidgetConfigFilters } from "../widgetConfig/widgetConfig.schema.js";
+import type { ListWidgetConfig, WidgetConfigFilters } from "../widgetConfig/widgetConfig.schema.js";
 
 // Copied from karfur (apps/client/src/lib/search-helpers.ts, buildBaseMatch) until the search
 // filters are shared in a package (RI-1650). Keep the semantics identical.
@@ -107,3 +107,27 @@ export const buildDispositifMatch = (filters: WidgetConfigFilters): Document => 
 
   return clauses.length > 0 ? { status: "Actif", $and: clauses } : { status: "Actif" };
 };
+
+/**
+ * The contents of a list widget: the ones matching its filters and the ones added by hand, minus
+ * the excluded ones. A content added by hand does not need to match the filters, but it still has
+ * to be published.
+ */
+export const buildListWidgetMatch = ({
+  filters,
+  selectedDispositifIds,
+  excludedDispositifIds,
+}: Pick<
+  ListWidgetConfig,
+  "filters" | "selectedDispositifIds" | "excludedDispositifIds"
+>): Document => ({
+  $and: [
+    { _id: { $nin: excludedDispositifIds } },
+    {
+      $or: [
+        buildDispositifMatch(filters),
+        { _id: { $in: selectedDispositifIds }, status: "Actif" },
+      ],
+    },
+  ],
+});

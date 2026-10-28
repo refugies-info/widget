@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { describe, expect, it } from "vitest";
-import { buildDispositifMatch } from "./dispositif.match.js";
-import { buildPresentationStages, buildSortStages, planPage } from "./dispositif.pipeline.js";
+import { buildDispositifMatch, buildListWidgetMatch } from "./dispositif.match.js";
+import { buildPresentationStages, buildSortStages } from "./dispositif.pipeline.js";
 
 describe("buildDispositifMatch", () => {
   it("only asks for published contents without filters", () => {
@@ -150,40 +150,37 @@ describe("buildPresentationStages", () => {
   });
 });
 
-describe("planPage", () => {
-  it("fills the first page with the selected contents", () => {
-    expect(planPage({ selectedCount: 3, page: 1, pageSize: 4 })).toEqual({
-      selectedStart: 0,
-      selectedEnd: 3,
-      filteredSkip: 0,
-      filteredLimit: 1,
+describe("buildListWidgetMatch", () => {
+  const selected = new ObjectId();
+  const excluded = new ObjectId();
+  const theme = new ObjectId();
+
+  it("matches the contents of the filters or the selected ones, except the excluded ones", () => {
+    const filters = { themes: [theme] };
+
+    expect(
+      buildListWidgetMatch({
+        filters,
+        selectedDispositifIds: [selected],
+        excludedDispositifIds: [excluded],
+      }),
+    ).toEqual({
+      $and: [
+        { _id: { $nin: [excluded] } },
+        {
+          $or: [buildDispositifMatch(filters), { _id: { $in: [selected] }, status: "Actif" }],
+        },
+      ],
     });
   });
 
-  it("continues with the filtered contents after the selected ones", () => {
-    expect(planPage({ selectedCount: 3, page: 2, pageSize: 4 })).toEqual({
-      selectedStart: 3,
-      selectedEnd: 3,
-      filteredSkip: 1,
-      filteredLimit: 4,
+  it("only returns a selected content if it is published", () => {
+    const match = buildListWidgetMatch({
+      filters: {},
+      selectedDispositifIds: [selected],
+      excludedDispositifIds: [],
     });
-  });
 
-  it("spreads the selected contents over several pages", () => {
-    expect(planPage({ selectedCount: 6, page: 2, pageSize: 4 })).toEqual({
-      selectedStart: 4,
-      selectedEnd: 6,
-      filteredSkip: 0,
-      filteredLimit: 2,
-    });
-  });
-
-  it("has no selected content to show without selection", () => {
-    expect(planPage({ selectedCount: 0, page: 3, pageSize: 8 })).toEqual({
-      selectedStart: 0,
-      selectedEnd: 0,
-      filteredSkip: 16,
-      filteredLimit: 8,
-    });
+    expect(match.$and[1].$or[1]).toEqual({ _id: { $in: [selected] }, status: "Actif" });
   });
 });

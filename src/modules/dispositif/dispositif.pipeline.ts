@@ -147,33 +147,3 @@ export const buildPresentationStages = (locale: string, type: WidgetConfig["type
     },
   ];
 };
-
-export interface PagePlan {
-  selectedStart: number;
-  selectedEnd: number;
-  filteredSkip: number;
-  filteredLimit: number;
-}
-
-/**
- * The selected contents come first, then the filtered ones: both form a single paginated list.
- */
-export const planPage = ({
-  selectedCount,
-  page,
-  pageSize,
-}: {
-  selectedCount: number;
-  page: number;
-  pageSize: number;
-}): PagePlan => {
-  const offset = (page - 1) * pageSize;
-  const selectedStart = Math.min(offset, selectedCount);
-  const selectedEnd = Math.min(offset + pageSize, selectedCount);
-  return {
-    selectedStart,
-    selectedEnd,
-    filteredSkip: Math.max(0, offset - selectedCount),
-    filteredLimit: pageSize - (selectedEnd - selectedStart),
-  };
-};

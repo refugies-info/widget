@@ -1,11 +1,11 @@
-import type { Collection, Db, ObjectId } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import type {
   ListWidgetConfig,
   ThumbnailWidgetConfig,
   WidgetConfig,
 } from "../widgetConfig/widgetConfig.schema.js";
-import { buildDispositifMatch } from "./dispositif.match.js";
-import { buildPresentationStages, buildSortStages, planPage } from "./dispositif.pipeline.js";
+import { buildListWidgetMatch } from "./dispositif.match.js";
+import { buildPresentationStages, buildSortStages } from "./dispositif.pipeline.js";
 import {
   type DisplayedDispositif,
   displayedCardSchema,
@@ -25,10 +25,6 @@ export interface DispositifRepository {
     options: { page: number; locale: string },
   ) => Promise<ListDispositifsPage>;
 }
-
-const unique = (ids: ObjectId[]): ObjectId[] => [
-  ...new Map(ids.map((id) => [id.toHexString(), id])).values(),
-];
 
 const findThumbnail = async (
   collection: Collection,
@@ -51,57 +47,23 @@ const findList = async (
   config: ListWidgetConfig,
   { page, locale }: { page: number; locale: string },
 ): Promise<ListDispositifsPage> => {
-  const selectedIds = unique(config.selectedDispositifIds);
-  const filteredMatch = {
-    $and: [
-      buildDispositifMatch(config.filters),
-      { _id: { $nin: [...config.excludedDispositifIds, ...selectedIds] } },
-    ],
-  };
-  const presentation = buildPresentationStages(locale, "list");
+  const match = buildListWidgetMatch(config);
 
-  const [publishedSelectedDocs, filteredCount] = await Promise.all([
+  const [docs, total] = await Promise.all([
     collection
       .aggregate([
-        {
-          $match: {
-            _id: { $in: selectedIds, $nin: config.excludedDispositifIds },
-            status: "Actif",
-          },
-        },
-        ...presentation,
+        { $match: match },
+        ...buildSortStages(config.sortBy),
+        { $skip: (page - 1) * config.pageSize },
+        { $limit: config.pageSize },
+        ...buildPresentationStages(locale, "list"),
       ])
       .toArray(),
-    collection.countDocuments(filteredMatch),
+    collection.countDocuments(match),
   ]);
-  const total = publishedSelectedDocs.length + filteredCount;
-
-  const selectedOrder = new Map(selectedIds.map((id, index) => [id.toHexString(), index]));
-  const publishedSelected = publishedSelectedDocs
-    .map((doc) => displayedCardSchema.parse(doc))
-    .sort((a, b) => (selectedOrder.get(a.id) ?? 0) - (selectedOrder.get(b.id) ?? 0));
-
-  const plan = planPage({
-    selectedCount: publishedSelected.length,
-    page,
-    pageSize: config.pageSize,
-  });
-  const orderedSelected = publishedSelected.slice(plan.selectedStart, plan.selectedEnd);
-  const filteredDocs =
-    plan.filteredLimit > 0 && filteredCount > plan.filteredSkip
-      ? await collection
-          .aggregate([
-            { $match: filteredMatch },
-            ...buildSortStages(config.sortBy),
-            { $skip: plan.filteredSkip },
-            { $limit: plan.filteredLimit },
-            ...presentation,
-          ])
-          .toArray()
-      : [];
 
   return {
-    items: [...orderedSelected, ...filteredDocs.map((doc) => displayedCardSchema.parse(doc))],
+    items: docs.map((doc) => displayedCardSchema.parse(doc)),
     total,
     page,
     pageCount: Math.ceil(total / config.pageSize),
