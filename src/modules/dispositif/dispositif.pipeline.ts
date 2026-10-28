@@ -1,5 +1,5 @@
 import type { Document } from "mongodb";
-import type { WidgetConfig } from "../widgetConfig/widgetConfig.schema.js";
+import type { ListWidgetConfig, WidgetConfig } from "../widgetConfig/widgetConfig.schema.js";
 
 // Copied from karfur (apps/client/src/lib/search-helpers.ts) until the search logic is shared
 // in a package (RI-1650).
@@ -8,7 +8,7 @@ import type { WidgetConfig } from "../widgetConfig/widgetConfig.schema.js";
  * Sort stages of the search. `_id` is the last key so that two pages never overlap or skip a
  * content when the other keys are equal.
  */
-export const buildSortStages = (sortBy: WidgetConfig["sortBy"]): Document[] => {
+export const buildSortStages = (sortBy: ListWidgetConfig["sortBy"]): Document[] => {
   switch (sortBy) {
     case "theme":
       return [
@@ -39,23 +39,107 @@ const resolveTranslation = (locale: string, field: string): Document => ({
   $ifNull: [`$translations.${locale}.content.${field}`, `$translations.fr.content.${field}`],
 });
 
-/**
- * Keeps only what a widget displays. `locale` ends up in a field path: it must be validated by
- * the caller.
- */
-export const buildPresentationStages = (locale: string): Document[] => [
+const isDemarche: Document = { $eq: ["$typeContenu", "demarche"] };
+
+const buildThemeStages = (): Document[] => [
   {
-    $project: {
-      _id: 0,
-      id: { $toString: "$_id" },
-      typeContenu: 1,
-      publishedAt: 1,
-      titreInformatif: resolveTranslation(locale, "titreInformatif"),
-      titreMarque: resolveTranslation(locale, "titreMarque"),
-      abstract: resolveTranslation(locale, "abstract"),
+    $lookup: { from: "themes", localField: "theme", foreignField: "_id", as: "presentationTheme" },
+  },
+  { $unwind: { path: "$presentationTheme", preserveNullAndEmptyArrays: true } },
+];
+
+const themeImageUrl: Document = {
+  $cond: [
+    isDemarche,
+    "$presentationTheme.demarcheImage.secure_url",
+    "$presentationTheme.dispositifImage.secure_url",
+  ],
+};
+
+const buildSponsorStages = (locale: string): Document[] => [
+  {
+    $lookup: {
+      from: "structures",
+      localField: "mainSponsor",
+      foreignField: "_id",
+      as: "presentationSponsor",
+    },
+  },
+  { $unwind: { path: "$presentationSponsor", preserveNullAndEmptyArrays: true } },
+  {
+    $addFields: {
+      sponsorName: {
+        $ifNull: [
+          "$presentationSponsor.nom",
+          { $cond: [isDemarche, resolveTranslation(locale, "administrationName"), null] },
+        ],
+      },
+      sponsorPictureUrl: {
+        $ifNull: [
+          "$presentationSponsor.picture.secure_url",
+          { $cond: [isDemarche, "$administrationLogo.secure_url", null] },
+        ],
+      },
     },
   },
 ];
+
+export const buildPresentationStages = (locale: string, type: WidgetConfig["type"]): Document[] => {
+  if (type === "thumbnail") {
+    return [
+      ...buildThemeStages(),
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: "$_id" },
+          typeContenu: 1,
+          titreInformatif: resolveTranslation(locale, "titreInformatif"),
+          abstract: resolveTranslation(locale, "abstract"),
+          imageUrl: themeImageUrl,
+        },
+      },
+    ];
+  }
+
+  return [
+    ...buildThemeStages(),
+    ...buildSponsorStages(locale),
+    {
+      $project: {
+        _id: 0,
+        id: { $toString: "$_id" },
+        typeContenu: 1,
+        titreInformatif: resolveTranslation(locale, "titreInformatif"),
+        abstract: resolveTranslation(locale, "abstract"),
+        location: "$metadatas.location",
+        theme: {
+          $cond: [
+            { $ifNull: ["$presentationTheme", false] },
+            {
+              name: {
+                $ifNull: [`$presentationTheme.short.${locale}`, "$presentationTheme.short.fr"],
+              },
+              color: "$presentationTheme.colors.color40",
+              imageUrl: themeImageUrl,
+            },
+            null,
+          ],
+        },
+        secondaryThemeCount: { $size: { $ifNull: ["$secondaryThemes", []] } },
+        sponsor: {
+          $cond: [
+            { $gt: [{ $strLenCP: { $ifNull: ["$sponsorName", ""] } }, 0] },
+            { name: "$sponsorName", pictureUrl: "$sponsorPictureUrl" },
+            null,
+          ],
+        },
+        price: "$metadatas.price",
+        commitment: "$metadatas.commitment",
+        lastModificationDate: 1,
+      },
+    },
+  ];
+};
 
 export interface PagePlan {
   selectedStart: number;

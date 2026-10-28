@@ -39,12 +39,16 @@ const widgetConfigFiltersSchema = z.object({
 
 export type WidgetConfigFilters = z.infer<typeof widgetConfigFiltersSchema>;
 
-export const widgetConfigSchema = z.object({
+const baseWidgetConfigShape = {
   publicId: z.string(),
   status: z.enum(WIDGET_CONFIG_STATUSES),
-  type: z.enum(WIDGET_CONFIG_TYPES),
   authorizedDomains: z.array(z.string()),
   externalTitle: z.string(),
+};
+
+const listWidgetConfigSchema = z.object({
+  ...baseWidgetConfigShape,
+  type: z.literal("list"),
   description: z.string().optional(),
   displayDescription: z.boolean(),
   filters: widgetConfigFiltersSchema,
@@ -57,4 +61,17 @@ export const widgetConfigSchema = z.object({
   filterBarOptions: z.array(z.enum(WIDGET_CONFIG_FILTER_BAR_OPTIONS)),
 });
 
+const thumbnailWidgetConfigSchema = z.object({
+  ...baseWidgetConfigShape,
+  type: z.literal("thumbnail"),
+  dispositifId: objectIdSchema,
+});
+
+export const widgetConfigSchema = z.discriminatedUnion("type", [
+  listWidgetConfigSchema,
+  thumbnailWidgetConfigSchema,
+]);
+
+export type ListWidgetConfig = z.infer<typeof listWidgetConfigSchema>;
+export type ThumbnailWidgetConfig = z.infer<typeof thumbnailWidgetConfigSchema>;
 export type WidgetConfig = z.infer<typeof widgetConfigSchema>;

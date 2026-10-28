@@ -96,14 +96,45 @@ describe("buildSortStages", () => {
 });
 
 describe("buildPresentationStages", () => {
-  it("falls back to French and never keeps the Mongo id or the translations", () => {
-    const [stage] = buildPresentationStages("en");
-    const $project = stage?.$project;
+  const joinedCollections = (type: "list" | "thumbnail") =>
+    buildPresentationStages("en", type)
+      .filter((stage) => "$lookup" in stage)
+      .map((stage) => stage.$lookup.from);
 
-    expect($project?._id).toBe(0);
-    expect($project?.translations).toBeUndefined();
-    expect($project?.abstract).toEqual({
-      $ifNull: ["$translations.en.content.abstract", "$translations.fr.content.abstract"],
+  const projection = (type: "list" | "thumbnail") =>
+    buildPresentationStages("en", type).find((stage) => "$project" in stage)?.$project;
+
+  it("only joins the theme of a thumbnail, and also the sponsor of a list", () => {
+    expect(joinedCollections("thumbnail")).toEqual(["themes"]);
+    expect(joinedCollections("list")).toEqual(["themes", "structures"]);
+  });
+
+  it("falls back to French and never keeps the Mongo id or the translations", () => {
+    for (const type of ["list", "thumbnail"] as const) {
+      expect(projection(type)?._id).toBe(0);
+      expect(projection(type)?.translations).toBeUndefined();
+      expect(projection(type)?.abstract).toEqual({
+        $ifNull: ["$translations.en.content.abstract", "$translations.fr.content.abstract"],
+      });
+    }
+  });
+
+  it("keeps a thumbnail to a title, an abstract and an image", () => {
+    expect(Object.keys(projection("thumbnail") ?? {}).sort()).toEqual([
+      "_id",
+      "abstract",
+      "id",
+      "imageUrl",
+      "titreInformatif",
+      "typeContenu",
+    ]);
+  });
+
+  it("keeps the raw price, commitment and update date of a card for the front to format", () => {
+    expect(projection("list")).toMatchObject({
+      price: "$metadatas.price",
+      commitment: "$metadatas.commitment",
+      lastModificationDate: 1,
     });
   });
 });
