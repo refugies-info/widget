@@ -17,7 +17,7 @@ const widgetConfigDocument = {
   description: "Toutes les fiches utiles à Bordeaux.",
   displayDescription: true,
   filters: { departments: ["Gironde"], contentTypes: ["dispositif"] },
-  selectedDispositifIds: [],
+  selectedDispositifIds: ["6710f2a1c3d4e5f607182931"],
   excludedDispositifIds: [],
   pageSize: 8,
   sortBy: "date",
@@ -50,6 +50,8 @@ describe("toPublicWidgetConfig", () => {
       "structureName",
       "status",
       "filters",
+      "selectedDispositifIds",
+      "excludedDispositifIds",
       "createdAt",
       "updatedAt",
     ]) {
@@ -81,7 +83,7 @@ describe("widgetConfigSchema fields", () => {
     "displayFilterBar",
     "filterBarOptions",
   ];
-  const internalKeys = ["status"];
+  const internalKeys = ["status", "filters", "selectedDispositifIds", "excludedDispositifIds"];
 
   it("classifies every schema field as public or internal", () => {
     const classified = [...publicKeys, ...internalKeys].sort();

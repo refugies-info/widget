@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type AppDependencies, buildApp } from "./app.js";
+import type { DispositifRepository } from "./modules/dispositif/dispositif.repository.js";
 import type { WidgetConfig } from "./modules/widgetConfig/widgetConfig.schema.js";
 
 const activeConfig: WidgetConfig = {
@@ -10,12 +11,17 @@ const activeConfig: WidgetConfig = {
   externalTitle: "Les fiches de Bordeaux",
   description: "Toutes les fiches utiles à Bordeaux.",
   displayDescription: true,
+  filters: {},
+  selectedDispositifIds: [],
+  excludedDispositifIds: [],
   pageSize: 8,
   sortBy: "date",
   displayShareModule: true,
   displayFilterBar: true,
   filterBarOptions: ["keyword", "location"],
 };
+
+const emptyPage = { items: [], total: 0, page: 1, pageCount: 0 };
 
 const buildTestApp = (overrides: Partial<AppDependencies> = {}) =>
   buildApp(
@@ -26,6 +32,7 @@ const buildTestApp = (overrides: Partial<AppDependencies> = {}) =>
         findByPublicId: async (publicId) =>
           publicId === activeConfig.publicId ? activeConfig : null,
       },
+      dispositifRepository: { findDisplayedPage: async () => emptyPage },
       ...overrides,
     },
   );
@@ -76,6 +83,71 @@ describe("GET /widgets/:publicId", () => {
       "/widgets/not-a-uuid",
     ];
     const responses = await Promise.all(urls.map((url) => app.inject({ method: "GET", url })));
+
+    for (const response of responses) {
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual({ error: "Not Found" });
+    }
+  });
+});
+
+describe("GET /widgets/:publicId/dispositifs", () => {
+  const url = `/widgets/${activeConfig.publicId}/dispositifs`;
+
+  it("passes the page and the locale to the repository", async () => {
+    const calls: unknown[] = [];
+    const dispositifRepository: DispositifRepository = {
+      findDisplayedPage: async (config, options) => {
+        calls.push({ publicId: config.publicId, ...options });
+        return emptyPage;
+      },
+    };
+    const response = await buildTestApp({ dispositifRepository }).inject({
+      method: "GET",
+      url: `${url}?page=2&locale=en`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual(emptyPage);
+    expect(calls).toEqual([{ publicId: activeConfig.publicId, page: 2, locale: "en" }]);
+  });
+
+  it("defaults to the first page in French", async () => {
+    const calls: unknown[] = [];
+    const dispositifRepository: DispositifRepository = {
+      findDisplayedPage: async (_config, options) => {
+        calls.push(options);
+        return emptyPage;
+      },
+    };
+    await buildTestApp({ dispositifRepository }).inject({ method: "GET", url });
+
+    expect(calls).toEqual([{ page: 1, locale: "fr" }]);
+  });
+
+  it.each(["page=0", "page=abc", "page=100000", "locale=fr.content", "locale=$where"])(
+    "rejects the query %s",
+    async (query) => {
+      const response = await buildTestApp().inject({ method: "GET", url: `${url}?${query}` });
+      expect(response.statusCode).toBe(400);
+    },
+  );
+
+  it("answers the same 404 for an unknown, an inactive and a malformed widget", async () => {
+    const inactive = { ...activeConfig, status: "inactive" as const };
+    const app = buildTestApp({
+      widgetConfigRepository: {
+        findByPublicId: async (publicId) => (publicId === inactive.publicId ? inactive : null),
+      },
+    });
+    const urls = [
+      url,
+      "/widgets/00000000-0000-4000-8000-000000000000/dispositifs",
+      "/widgets/not-a-uuid/dispositifs",
+    ];
+    const responses = await Promise.all(
+      urls.map((target) => app.inject({ method: "GET", url: target })),
+    );
 
     for (const response of responses) {
       expect(response.statusCode).toBe(404);
