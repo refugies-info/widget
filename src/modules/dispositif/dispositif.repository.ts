@@ -60,7 +60,6 @@ const findList = async (
   };
   const presentation = buildPresentationStages(locale, "list");
 
-  // Mongo drops the selected contents that are excluded or not published anymore
   const [publishedSelectedDocs, filteredCount] = await Promise.all([
     collection
       .aggregate([
