@@ -96,6 +96,13 @@ export const buildPresentationStages = (locale: string, type: WidgetConfig["type
           titreInformatif: resolveTranslation(locale, "titreInformatif"),
           abstract: resolveTranslation(locale, "abstract"),
           imageUrl: themeImageUrl,
+          availableLanguages: {
+            $map: {
+              input: { $objectToArray: { $ifNull: ["$translations", {}] } },
+              as: "translation",
+              in: "$$translation.k",
+            },
+          },
         },
       },
     ];

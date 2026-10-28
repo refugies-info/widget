@@ -119,15 +119,26 @@ describe("buildPresentationStages", () => {
     }
   });
 
-  it("keeps a thumbnail to a title, an abstract and an image", () => {
+  it("keeps a thumbnail to a title, an abstract, an image and its languages", () => {
     expect(Object.keys(projection("thumbnail") ?? {}).sort()).toEqual([
       "_id",
       "abstract",
+      "availableLanguages",
       "id",
       "imageUrl",
       "titreInformatif",
       "typeContenu",
     ]);
+  });
+
+  it("lists the languages of a thumbnail from the keys of its translations", () => {
+    expect(projection("thumbnail")?.availableLanguages).toEqual({
+      $map: {
+        input: { $objectToArray: { $ifNull: ["$translations", {}] } },
+        as: "translation",
+        in: "$$translation.k",
+      },
+    });
   });
 
   it("keeps the raw price, commitment and update date of a card for the front to format", () => {

@@ -8,6 +8,7 @@ export const displayedThumbnailSchema = z.object({
   titreInformatif: z.string().nullish(),
   abstract: z.string().nullish(),
   imageUrl: z.string().nullish(),
+  availableLanguages: z.array(z.string()),
 });
 
 export const displayedCardSchema = z.object({
