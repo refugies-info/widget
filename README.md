@@ -4,14 +4,16 @@ Embeddable widgets of [refugies.info](https://refugies.info). A partner site emb
 
 ```
 partner site ──iframe──▶ front (Svelte) ──▶ backend (Fastify) ──▶ MongoDB
-                         /embed/:publicId     /widgets/:publicId    widget_config, dispositifs
+                         /embed/:publicId     /widgets/:publicId    widget_config, dispositifs, themes, structures
 ```
 
 The widget configs are written by the editor (`playground` repo) through the [karfur](https://github.com/refugies-info/karfur) API. This service only reads them.
 
 ## Status
 
-Work in progress. The backend serves `GET /health` and `GET /widgets/:publicId` (the public config of an active widget). The contents to display and the Svelte front are not implemented yet.
+Work in progress. The backend serves `GET /health`, `GET /widgets/:publicId` (the public config of an active widget) and `GET /widgets/:publicId/dispositifs?page=1&locale=fr` (the contents to display). The Svelte front is not implemented yet.
+
+The config of a widget depends on its `type`. A `thumbnail` widget only has the common fields and a `dispositifId`: the contents route returns that single content if it is published (title, abstract and theme image). A `list` widget has filters, selected and excluded contents, a page size and a sort: the route returns a paginated list of full cards (theme, sponsor, location, raw price, commitment and update date, which the front formats). The image URLs are relative to refugies.info.
 
 ## Identifying a widget
 

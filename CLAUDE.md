@@ -11,7 +11,7 @@ Backend (Fastify) and front (Svelte) serving the embeddable widgets of refugies.
 
 ## Scope and source of truth
 
-- This service is **read-only**: it never writes to MongoDB. Widget configs are written by the editor (`playground` repo) through the `karfur` API (`/api/webhook/widget-config/*`, model `WidgetConfig` in `@refugies-info/mongo`).
+- This service is **read-only**: it never writes to MongoDB. It reads `widget_config`, `dispositifs`, `themes` and `structures`. Widget configs are written by the editor (`playground` repo) through the `karfur` API (`/api/webhook/widget-config/*`, model `WidgetConfig` in `@refugies-info/mongo`).
 - The schema declared here is a minimal copy of `WidgetConfig` and `karfur` stays the source of truth. When the model changes there, update the schema here (the sample document in `widgetConfig.test.ts` mirrors a real one and is validated against it, so update both).
 - A widget is identified by its `publicId` (random UUID, unique index). Never expose the Mongo `_id`.
 
