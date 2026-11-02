@@ -1,0 +1,186 @@
+import { ObjectId } from "mongodb";
+import { describe, expect, it } from "vitest";
+import { buildDispositifMatch, buildListWidgetMatch } from "./dispositif.match.js";
+import { buildPresentationStages, buildSortStages } from "./dispositif.pipeline.js";
+
+describe("buildDispositifMatch", () => {
+  it("only asks for published contents without filters", () => {
+    expect(buildDispositifMatch({})).toEqual({ status: "Actif" });
+    expect(buildDispositifMatch({ departments: [], themes: [], publics: [" "] })).toEqual({
+      status: "Actif",
+    });
+  });
+
+  it("always includes the contents available in all of France when filtering on a department", () => {
+    const { $and } = buildDispositifMatch({ departments: ["Gironde", "online"] });
+    const [{ "metadatas.location": location }] = $and;
+
+    expect(location.$in).toHaveLength(3);
+    expect(location.$in[0].test("Bordeaux - Gironde")).toBe(true);
+    expect(location.$in[0].test("Gironde - Bordeaux")).toBe(false);
+    expect(location.$in.slice(1)).toEqual(["online", "france"]);
+  });
+
+  it("escapes the regex characters of a department", () => {
+    const { $and } = buildDispositifMatch({ departments: ["Côtes-d'Armor (.*)"] });
+    const [regex] = $and[0]["metadatas.location"].$in;
+
+    expect(regex.test("Saint-Brieuc - Côtes-d'Armor (.*)")).toBe(true);
+    expect(regex.test("Saint-Brieuc - Côtes-d'Armor (xx)")).toBe(false);
+  });
+
+  it("matches a theme or a need when both are selected", () => {
+    const theme = new ObjectId();
+    const need = new ObjectId();
+
+    expect(buildDispositifMatch({ themes: [theme], needs: [need] }).$and).toEqual([
+      { $or: [{ theme: { $in: [theme] } }, { needs: { $in: [need] } }] },
+    ]);
+    expect(buildDispositifMatch({ themes: [theme] }).$and).toEqual([{ theme: { $in: [theme] } }]);
+    expect(buildDispositifMatch({ needs: [need] }).$and).toEqual([{ needs: { $in: [need] } }]);
+  });
+
+  it("converts the French level categories to levels", () => {
+    expect(buildDispositifMatch({ frenchLevels: ["a", "b", "a"] }).$and).toEqual([
+      { "metadatas.frenchLevel": { $in: ["A1", "A2", "B1", "B2"] } },
+    ]);
+  });
+
+  it("ANDs the categories and ORs the values of a category", () => {
+    const match = buildDispositifMatch({
+      publics: ["women", "refugee"],
+      statuses: ["asile"],
+      languages: ["ar", "fa"],
+    });
+
+    expect(match.$and).toEqual([
+      { "metadatas.public": { $in: ["women", "refugee"] } },
+      { "metadatas.publicStatus": { $in: ["asile"] } },
+      { $or: [{ "translations.ar": { $exists: true } }, { "translations.fa": { $exists: true } }] },
+    ]);
+  });
+
+  it("ORs the age ranges", () => {
+    const { $and } = buildDispositifMatch({ ages: ["-18", "+25"] });
+    expect($and[0].$expr.$or).toHaveLength(2);
+  });
+
+  it("filters on a single content type only", () => {
+    expect(buildDispositifMatch({ contentTypes: ["demarche"] }).$and).toEqual([
+      { typeContenu: "demarche" },
+    ]);
+    expect(buildDispositifMatch({ contentTypes: ["demarche", "dispositif"] })).toEqual({
+      status: "Actif",
+    });
+  });
+});
+
+describe("buildSortStages", () => {
+  it.each([
+    ["date", { publishedAt: -1, _id: 1 }],
+    ["views", { nbVues: -1, _id: 1 }],
+    ["location", { isLocal: 1, "metadatas.vues": -1, _id: 1 }],
+    ["theme", { themeSortIndex: 1, publishedAt: -1, _id: 1 }],
+  ] as const)("sorts by %s with the id as a tie-breaker", (sortBy, expectedSort) => {
+    const sort = buildSortStages(sortBy).find((stage) => "$sort" in stage);
+    expect(sort).toEqual({ $sort: expectedSort });
+  });
+
+  it("only joins the themes to sort by theme", () => {
+    const lookups = (sortBy: "date" | "views" | "location" | "theme") =>
+      buildSortStages(sortBy).filter((stage) => "$lookup" in stage);
+
+    expect(lookups("theme")).toHaveLength(1);
+    expect(lookups("date")).toHaveLength(0);
+  });
+});
+
+describe("buildPresentationStages", () => {
+  const joinedCollections = (type: "list" | "thumbnail") =>
+    buildPresentationStages("en", type)
+      .filter((stage) => "$lookup" in stage)
+      .map((stage) => stage.$lookup.from);
+
+  const projection = (type: "list" | "thumbnail") =>
+    buildPresentationStages("en", type).find((stage) => "$project" in stage)?.$project;
+
+  it("only joins the theme of a thumbnail, and also the sponsor of a list", () => {
+    expect(joinedCollections("thumbnail")).toEqual(["themes"]);
+    expect(joinedCollections("list")).toEqual(["themes", "structures"]);
+  });
+
+  it("falls back to French and never keeps the Mongo id or the translations", () => {
+    for (const type of ["list", "thumbnail"] as const) {
+      expect(projection(type)?._id).toBe(0);
+      expect(projection(type)?.translations).toBeUndefined();
+      expect(projection(type)?.abstract).toEqual({
+        $ifNull: ["$translations.en.content.abstract", "$translations.fr.content.abstract"],
+      });
+    }
+  });
+
+  it("keeps a thumbnail to a title, an abstract, an image and its languages", () => {
+    expect(Object.keys(projection("thumbnail") ?? {}).sort()).toEqual([
+      "_id",
+      "abstract",
+      "availableLanguages",
+      "id",
+      "imageUrl",
+      "titreInformatif",
+      "typeContenu",
+    ]);
+  });
+
+  it("lists the languages of a thumbnail from the keys of its translations", () => {
+    expect(projection("thumbnail")?.availableLanguages).toEqual({
+      $map: {
+        input: { $objectToArray: { $ifNull: ["$translations", {}] } },
+        as: "translation",
+        in: "$$translation.k",
+      },
+    });
+  });
+
+  it("keeps the raw price, commitment and update date of a card for the front to format", () => {
+    expect(projection("list")).toMatchObject({
+      price: "$metadatas.price",
+      commitment: "$metadatas.commitment",
+      lastModificationDate: 1,
+    });
+  });
+});
+
+describe("buildListWidgetMatch", () => {
+  const selected = new ObjectId();
+  const excluded = new ObjectId();
+  const theme = new ObjectId();
+
+  it("matches the contents of the filters or the selected ones, except the excluded ones", () => {
+    const filters = { themes: [theme] };
+
+    expect(
+      buildListWidgetMatch({
+        filters,
+        selectedDispositifIds: [selected],
+        excludedDispositifIds: [excluded],
+      }),
+    ).toEqual({
+      $and: [
+        { _id: { $nin: [excluded] } },
+        {
+          $or: [buildDispositifMatch(filters), { _id: { $in: [selected] }, status: "Actif" }],
+        },
+      ],
+    });
+  });
+
+  it("only returns a selected content if it is published", () => {
+    const match = buildListWidgetMatch({
+      filters: {},
+      selectedDispositifIds: [selected],
+      excludedDispositifIds: [],
+    });
+
+    expect(match.$and[1].$or[1]).toEqual({ _id: { $in: [selected] }, status: "Actif" });
+  });
+});
