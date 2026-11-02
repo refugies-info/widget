@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { Config } from "./config.js";
 import type { Database } from "./db.js";
 import type { DispositifRepository } from "./modules/dispositif/dispositif.repository.js";
+import type { FilterOptionsRepository } from "./modules/filterOptions/filterOptions.repository.js";
 import type { KeywordSearch } from "./modules/search/keywordSearch.js";
 import type { WidgetConfigRepository } from "./modules/widgetConfig/widgetConfig.repository.js";
 import { healthRoutes } from "./routes/health.js";
@@ -12,14 +13,26 @@ export interface AppDependencies {
   widgetConfigRepository: WidgetConfigRepository;
   dispositifRepository: DispositifRepository;
   keywordSearch: KeywordSearch;
+  filterOptionsRepository: FilterOptionsRepository;
 }
 
 export const buildApp = (
   config: Pick<Config, "LOG_LEVEL">,
-  { database, widgetConfigRepository, dispositifRepository, keywordSearch }: AppDependencies,
+  {
+    database,
+    widgetConfigRepository,
+    dispositifRepository,
+    keywordSearch,
+    filterOptionsRepository,
+  }: AppDependencies,
 ): FastifyInstance => {
   const app = Fastify({ logger: { level: config.LOG_LEVEL } });
   app.register(healthRoutes, { database });
-  app.register(widgetRoutes, { widgetConfigRepository, dispositifRepository, keywordSearch });
+  app.register(widgetRoutes, {
+    widgetConfigRepository,
+    dispositifRepository,
+    keywordSearch,
+    filterOptionsRepository,
+  });
   return app;
 };

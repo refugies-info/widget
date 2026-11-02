@@ -38,6 +38,7 @@ const buildTestApp = (overrides: Partial<AppDependencies> = {}) =>
       },
       dispositifRepository: { findDisplayedPage: async () => emptyPage },
       keywordSearch: { findMatchedDispositifsIds: async () => [] },
+      filterOptionsRepository: { findThemes: async () => [], findLanguages: async () => [] },
       ...overrides,
     },
   );
@@ -114,6 +115,57 @@ describe("GET /widgets/:publicId", () => {
       "/widgets/not-a-uuid",
     ];
     const responses = await Promise.all(urls.map((url) => app.inject({ method: "GET", url })));
+
+    for (const response of responses) {
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual({ error: "Not Found" });
+    }
+  });
+});
+
+describe("GET /widgets/:publicId/filters", () => {
+  const url = `/widgets/${activeConfig.publicId}/filters`;
+
+  it("returns the values of the enabled dropdowns in the locale of the visitor", async () => {
+    const themeLocales: string[] = [];
+    const app = buildTestApp({
+      widgetConfigRepository: {
+        findByPublicId: async () => ({ ...activeConfig, filterBarOptions: ["theme", "location"] }),
+      },
+      filterOptionsRepository: {
+        findThemes: async (locale) => {
+          themeLocales.push(locale);
+          return [{ id: "64b7f0c2a1d3e4f5a6b7c8d9", name: "Housing", color: null }];
+        },
+        findLanguages: async () => [],
+      },
+    });
+
+    const response = await app.inject({ method: "GET", url: `${url}?locale=en` });
+
+    expect(response.statusCode).toBe(200);
+    expect(themeLocales).toEqual(["en"]);
+    expect(Object.keys(response.json()).sort()).toEqual(["departments", "themes"]);
+  });
+
+  it("rejects an invalid locale", async () => {
+    const response = await buildTestApp().inject({ method: "GET", url: `${url}?locale=$where` });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("answers the same 404 for an unknown, an inactive and a malformed widget", async () => {
+    const inactive = { ...activeConfig, status: "inactive" as const };
+    const app = buildTestApp({
+      widgetConfigRepository: { findByPublicId: async () => inactive },
+    });
+    const urls = [
+      url,
+      "/widgets/00000000-0000-4000-8000-000000000000/filters",
+      "/widgets/not-a-uuid/filters",
+    ];
+    const responses = await Promise.all(
+      urls.map((target) => app.inject({ method: "GET", url: target })),
+    );
 
     for (const response of responses) {
       expect(response.statusCode).toBe(404);
@@ -271,7 +323,7 @@ describe("GET /widgets/:publicId/dispositifs", () => {
       "languages=fr.content",
       "departments=",
       `search=${"a".repeat(101)}`,
-      `departments=${"a".repeat(101)}`,
+      "departments=Atlantis",
       `languages=${Array.from({ length: 31 }, () => "ar").join("&languages=")}`,
     ])("rejects the query %s", async (query) => {
       const response = await buildTestApp().inject({ method: "GET", url: `${url}?${query}` });

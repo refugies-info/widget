@@ -17,6 +17,8 @@ The config of a widget depends on its `type`. A `thumbnail` widget only has the 
 
 The contents route of a `list` widget also takes the filters of the visitor, one parameter per option of `filterBarOptions` (repeat a parameter for several values): `search` (keyword, 100 characters max), `departments`, `themes` (ids), `publics`, `statuses`, `frenchLevels`, `ages` and `languages`. The values of a category are OR-ed, the categories are AND-ed, and they only narrow down the list of the widget (selected contents included, excluded ones stay excluded). A parameter whose option is not in the filter bar, or any parameter when `displayFilterBar` is off, is ignored; an invalid value is a 400. A keyword is searched in Algolia and the contents come in the order of its results instead of the sort of the widget. `total` and `pageCount` reflect the search and the filters.
 
+`GET /widgets/:publicId/filters?locale=fr` returns the values of the dropdowns of the filter bar, only for the enabled options: `departments` (a fixed list), `themes` (`id`, `name` in the locale with a French fallback, `color`) and `languages` (`code`, `name`, `localName`). The themes and the languages are read from MongoDB.
+
 ## Identifying a widget
 
 A widget is identified by its `publicId`, a random UUID with a unique index, meant for the embed code. The Mongo `_id` is never exposed.

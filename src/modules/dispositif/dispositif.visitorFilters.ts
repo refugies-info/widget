@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
+import { DEPARTMENT_NAMES } from "../filterOptions/departments.js";
 import {
   WIDGET_CONFIG_AGES,
   WIDGET_CONFIG_FRENCH_LEVELS,
@@ -26,7 +27,7 @@ const objectIdParam = z
 
 export const visitorFiltersQuerySchema = z.object({
   search: z.string().trim().max(MAX_SEARCH_LENGTH).optional(),
-  departments: list(z.string().trim().min(1).max(MAX_SEARCH_LENGTH)),
+  departments: list(z.enum(DEPARTMENT_NAMES)),
   themes: list(objectIdParam),
   publics: list(z.enum(PUBLICS)),
   statuses: list(z.enum(STATUSES)),

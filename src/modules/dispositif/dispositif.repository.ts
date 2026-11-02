@@ -63,14 +63,18 @@ const findList = async (
 
   const match = buildListWidgetMatch(config, {
     filters,
-    matchedDispositifsIds: matchedDispositifsIds?.filter(ObjectId.isValid).map((id) => new ObjectId(id)),
+    matchedDispositifsIds: matchedDispositifsIds
+      ?.filter(ObjectId.isValid)
+      .map((id) => new ObjectId(id)),
   });
 
   const [docs, total] = await Promise.all([
     collection
       .aggregate([
         { $match: match },
-        ...(matchedDispositifsIds ? buildKeywordRankStages(matchedDispositifsIds) : buildSortStages(config.sortBy)),
+        ...(matchedDispositifsIds
+          ? buildKeywordRankStages(matchedDispositifsIds)
+          : buildSortStages(config.sortBy)),
         { $skip: (page - 1) * config.pageSize },
         { $limit: config.pageSize },
         ...buildPresentationStages(locale, "list"),

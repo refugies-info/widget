@@ -115,10 +115,11 @@ export const buildDispositifMatch = (filters: WidgetConfigFilters): Document => 
  */
 
 export const buildListWidgetMatch = (
-  { filters, selectedDispositifIds, excludedDispositifIds }: Pick<
-    ListWidgetConfig,
-    "filters" | "selectedDispositifIds" | "excludedDispositifIds"
-  >,
+  {
+    filters,
+    selectedDispositifIds,
+    excludedDispositifIds,
+  }: Pick<ListWidgetConfig, "filters" | "selectedDispositifIds" | "excludedDispositifIds">,
   visitor: { filters?: WidgetConfigFilters; matchedDispositifsIds?: ObjectId[] } = {},
 ): Document => {
   const widgetMatch = {
@@ -136,7 +137,8 @@ export const buildListWidgetMatch = (
   const visitorClauses: Document[] = [];
   const visitorMatch = buildDispositifMatch(visitor.filters ?? {});
   if (visitorMatch.$and) visitorClauses.push(visitorMatch);
-  if (visitor.matchedDispositifsIds) visitorClauses.push({ _id: { $in: visitor.matchedDispositifsIds } });
+  if (visitor.matchedDispositifsIds)
+    visitorClauses.push({ _id: { $in: visitor.matchedDispositifsIds } });
 
   return visitorClauses.length > 0 ? { $and: [widgetMatch, ...visitorClauses] } : widgetMatch;
 };

@@ -208,7 +208,7 @@ describe("buildListWidgetMatch with the filters of a visitor", () => {
 
   it("restricts the list to the ids found by the keyword search", () => {
     const found = [new ObjectId(), new ObjectId()];
-    const match = buildListWidgetMatch(widget, { keywordIds: found });
+    const match = buildListWidgetMatch(widget, { matchedDispositifsIds: found });
 
     expect(match.$and).toEqual([buildListWidgetMatch(widget), { _id: { $in: found } }]);
   });
