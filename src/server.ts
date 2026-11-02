@@ -2,6 +2,7 @@ import { buildApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { connectDatabase } from "./db.js";
 import { createDispositifRepository } from "./modules/dispositif/dispositif.repository.js";
+import { createKeywordSearch } from "./modules/search/keywordSearch.js";
 import { createWidgetConfigRepository } from "./modules/widgetConfig/widgetConfig.repository.js";
 
 const config = loadConfig();
@@ -10,6 +11,7 @@ const app = buildApp(config, {
   database,
   widgetConfigRepository: createWidgetConfigRepository(database.db),
   dispositifRepository: createDispositifRepository(database.db),
+  keywordSearch: createKeywordSearch(config),
 });
 
 const shutdown = async () => {

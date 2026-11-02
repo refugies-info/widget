@@ -35,6 +35,11 @@ export const buildSortStages = (sortBy: ListWidgetConfig["sortBy"]): Document[] 
   }
 };
 
+export const buildKeywordRankStages = (keywordIds: string[]): Document[] => [
+  { $addFields: { keywordRank: { $indexOfArray: [keywordIds, { $toString: "$_id" }] } } },
+  { $sort: { keywordRank: 1, _id: 1 } },
+];
+
 const resolveTranslation = (locale: string, field: string): Document => ({
   $ifNull: [`$translations.${locale}.content.${field}`, `$translations.fr.content.${field}`],
 });

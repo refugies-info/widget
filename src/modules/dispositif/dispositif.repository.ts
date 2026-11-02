@@ -1,11 +1,16 @@
-import type { Collection, Db } from "mongodb";
+import { type Collection, type Db, ObjectId } from "mongodb";
 import type {
   ListWidgetConfig,
   ThumbnailWidgetConfig,
   WidgetConfig,
+  WidgetConfigFilters,
 } from "../widgetConfig/widgetConfig.schema.js";
 import { buildListWidgetMatch } from "./dispositif.match.js";
-import { buildPresentationStages, buildSortStages } from "./dispositif.pipeline.js";
+import {
+  buildKeywordRankStages,
+  buildPresentationStages,
+  buildSortStages,
+} from "./dispositif.pipeline.js";
 import {
   type DisplayedDispositif,
   displayedCardSchema,
@@ -19,10 +24,17 @@ export interface ListDispositifsPage {
   pageCount: number;
 }
 
+export interface FindDisplayedPageOptions {
+  page: number;
+  locale: string;
+  filters?: WidgetConfigFilters;
+  matchedDispositifsIds?: string[];
+}
+
 export interface DispositifRepository {
   findDisplayedPage: (
     config: WidgetConfig,
-    options: { page: number; locale: string },
+    options: FindDisplayedPageOptions,
   ) => Promise<ListDispositifsPage>;
 }
 
@@ -45,15 +57,20 @@ const findThumbnail = async (
 const findList = async (
   collection: Collection,
   config: ListWidgetConfig,
-  { page, locale }: { page: number; locale: string },
+  { page, locale, filters, matchedDispositifsIds }: FindDisplayedPageOptions,
 ): Promise<ListDispositifsPage> => {
-  const match = buildListWidgetMatch(config);
+  if (matchedDispositifsIds?.length === 0) return { items: [], total: 0, page, pageCount: 0 };
+
+  const match = buildListWidgetMatch(config, {
+    filters,
+    matchedDispositifsIds: matchedDispositifsIds?.filter(ObjectId.isValid).map((id) => new ObjectId(id)),
+  });
 
   const [docs, total] = await Promise.all([
     collection
       .aggregate([
         { $match: match },
-        ...buildSortStages(config.sortBy),
+        ...(matchedDispositifsIds ? buildKeywordRankStages(matchedDispositifsIds) : buildSortStages(config.sortBy)),
         { $skip: (page - 1) * config.pageSize },
         { $limit: config.pageSize },
         ...buildPresentationStages(locale, "list"),

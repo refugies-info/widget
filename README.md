@@ -15,6 +15,8 @@ Work in progress. The backend serves `GET /health`, `GET /widgets/:publicId` (th
 
 The config of a widget depends on its `type`. A `thumbnail` widget only has the common fields and a `dispositifId`: the contents route returns that single content if it is published (title, abstract and theme image). A `list` widget has filters, selected and excluded contents, a page size and a sort: the route returns a paginated list of full cards (theme, sponsor, location, raw price, commitment and update date, which the front formats). The image URLs are relative to refugies.info.
 
+The contents route of a `list` widget also takes the filters of the visitor, one parameter per option of `filterBarOptions` (repeat a parameter for several values): `search` (keyword, 100 characters max), `departments`, `themes` (ids), `publics`, `statuses`, `frenchLevels`, `ages` and `languages`. The values of a category are OR-ed, the categories are AND-ed, and they only narrow down the list of the widget (selected contents included, excluded ones stay excluded). A parameter whose option is not in the filter bar, or any parameter when `displayFilterBar` is off, is ignored; an invalid value is a 400. A keyword is searched in Algolia and the contents come in the order of its results instead of the sort of the widget. `total` and `pageCount` reflect the search and the filters.
+
 ## Identifying a widget
 
 A widget is identified by its `publicId`, a random UUID with a unique index, meant for the embed code. The Mongo `_id` is never exposed.
@@ -34,6 +36,9 @@ pnpm dev
 | Variable | Default | Description |
 |---|---|---|
 | `MONGODB_URI` | — (required) | MongoDB connection string, with the database name |
+| `ALGOLIA_APP_ID` | — (required) | Algolia application id |
+| `ALGOLIA_SEARCH_API_KEY` | — (required) | Algolia **search-only** key, never the admin key |
+| `ALGOLIA_INDEX_NAME` | — (required) | Algolia index of the environment (production or staging) |
 | `PORT` | `3000` | Port the server listens on |
 | `HOST` | `0.0.0.0` | Host the server listens on |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent` |

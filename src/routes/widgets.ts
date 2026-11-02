@@ -1,6 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import type { DispositifRepository } from "../modules/dispositif/dispositif.repository.js";
+import {
+  pickEnabledVisitorFilters,
+  visitorFiltersQuerySchema,
+} from "../modules/dispositif/dispositif.visitorFilters.js";
+import type { KeywordSearch } from "../modules/search/keywordSearch.js";
 import { toPublicWidgetConfig } from "../modules/widgetConfig/widgetConfig.presenter.js";
 import type { WidgetConfigRepository } from "../modules/widgetConfig/widgetConfig.repository.js";
 
@@ -8,7 +13,7 @@ const MAX_PAGE = 1000;
 
 const paramsSchema = z.object({ publicId: z.uuid() });
 
-const dispositifsQuerySchema = z.object({
+const dispositifsQuerySchema = visitorFiltersQuerySchema.extend({
   page: z.coerce.number().int().min(1).max(MAX_PAGE).default(1),
   locale: z
     .string()
@@ -19,7 +24,8 @@ const dispositifsQuerySchema = z.object({
 export const widgetRoutes: FastifyPluginAsync<{
   widgetConfigRepository: WidgetConfigRepository;
   dispositifRepository: DispositifRepository;
-}> = async (app, { widgetConfigRepository, dispositifRepository }) => {
+  keywordSearch: KeywordSearch;
+}> = async (app, { widgetConfigRepository, dispositifRepository, keywordSearch }) => {
   const findActiveWidgetConfig = async (params: unknown) => {
     const parsedParams = paramsSchema.safeParse(params);
     if (!parsedParams.success) return null;
@@ -42,7 +48,10 @@ export const widgetRoutes: FastifyPluginAsync<{
     const query = dispositifsQuerySchema.safeParse(request.query);
     if (!query.success) return reply.code(400).send({ error: "Bad Request" });
 
-    const { page, locale } = query.data;
-    return dispositifRepository.findDisplayedPage(config, { page, locale });
+    const { page, locale, ...visitorQuery } = query.data;
+    const { keyword, filters } = pickEnabledVisitorFilters(config, visitorQuery);
+    const matchedDispositifsIds = keyword ? await keywordSearch.findMatchedDispositifsIds(keyword) : undefined;
+
+    return dispositifRepository.findDisplayedPage(config, { page, locale, filters, matchedDispositifsIds });
   });
 };

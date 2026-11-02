@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@algolia/client-search": "^5.61.0",
     "fastify": "^5.12.7",
     "mongodb": "^7.7.0",
     "zod": "^4.6.7"

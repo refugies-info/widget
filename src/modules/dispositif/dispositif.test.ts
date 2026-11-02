@@ -1,7 +1,11 @@
 import { ObjectId } from "mongodb";
 import { describe, expect, it } from "vitest";
 import { buildDispositifMatch, buildListWidgetMatch } from "./dispositif.match.js";
-import { buildPresentationStages, buildSortStages } from "./dispositif.pipeline.js";
+import {
+  buildKeywordRankStages,
+  buildPresentationStages,
+  buildSortStages,
+} from "./dispositif.pipeline.js";
 
 describe("buildDispositifMatch", () => {
   it("only asks for published contents without filters", () => {
@@ -182,5 +186,41 @@ describe("buildListWidgetMatch", () => {
     });
 
     expect(match.$and[1].$or[1]).toEqual({ _id: { $in: [selected] }, status: "Actif" });
+  });
+});
+
+describe("buildListWidgetMatch with the filters of a visitor", () => {
+  const selected = new ObjectId();
+  const theme = new ObjectId();
+  const widget = { filters: {}, selectedDispositifIds: [selected], excludedDispositifIds: [] };
+
+  it("is the match of the widget when the visitor asks for nothing", () => {
+    expect(buildListWidgetMatch(widget, { filters: {} })).toEqual(buildListWidgetMatch(widget));
+  });
+
+  it("ANDs the filters of the visitor to the whole list, selected contents included", () => {
+    const match = buildListWidgetMatch(widget, { filters: { themes: [theme] } });
+
+    expect(match).toEqual({
+      $and: [buildListWidgetMatch(widget), buildDispositifMatch({ themes: [theme] })],
+    });
+  });
+
+  it("restricts the list to the ids found by the keyword search", () => {
+    const found = [new ObjectId(), new ObjectId()];
+    const match = buildListWidgetMatch(widget, { keywordIds: found });
+
+    expect(match.$and).toEqual([buildListWidgetMatch(widget), { _id: { $in: found } }]);
+  });
+});
+
+describe("buildKeywordRankStages", () => {
+  it("sorts by the rank of the search results, then by id", () => {
+    const stages = buildKeywordRankStages(["b", "a"]);
+
+    expect(stages[0]).toEqual({
+      $addFields: { keywordRank: { $indexOfArray: [["b", "a"], { $toString: "$_id" }] } },
+    });
+    expect(stages[1]).toEqual({ $sort: { keywordRank: 1, _id: 1 } });
   });
 });

@@ -1,7 +1,10 @@
 import { ObjectId } from "mongodb";
 import { describe, expect, it } from "vitest";
 import { type AppDependencies, buildApp } from "./app.js";
-import type { DispositifRepository } from "./modules/dispositif/dispositif.repository.js";
+import type {
+  DispositifRepository,
+  FindDisplayedPageOptions,
+} from "./modules/dispositif/dispositif.repository.js";
 import type { WidgetConfig } from "./modules/widgetConfig/widgetConfig.schema.js";
 
 const activeConfig: WidgetConfig = {
@@ -34,6 +37,7 @@ const buildTestApp = (overrides: Partial<AppDependencies> = {}) =>
           publicId === activeConfig.publicId ? activeConfig : null,
       },
       dispositifRepository: { findDisplayedPage: async () => emptyPage },
+      keywordSearch: { findMatchedDispositifsIds: async () => [] },
       ...overrides,
     },
   );
@@ -136,7 +140,9 @@ describe("GET /widgets/:publicId/dispositifs", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual(emptyPage);
-    expect(calls).toEqual([{ publicId: activeConfig.publicId, page: 2, locale: "en" }]);
+    expect(calls).toEqual([
+      { publicId: activeConfig.publicId, page: 2, locale: "en", filters: {} },
+    ]);
   });
 
   it("defaults to the first page in French", async () => {
@@ -149,7 +155,7 @@ describe("GET /widgets/:publicId/dispositifs", () => {
     };
     await buildTestApp({ dispositifRepository }).inject({ method: "GET", url });
 
-    expect(calls).toEqual([{ page: 1, locale: "fr" }]);
+    expect(calls).toEqual([{ page: 1, locale: "fr", filters: {} }]);
   });
 
   it.each(["page=0", "page=abc", "page=100000", "locale=fr.content", "locale=$where"])(
@@ -159,6 +165,119 @@ describe("GET /widgets/:publicId/dispositifs", () => {
       expect(response.statusCode).toBe(400);
     },
   );
+
+  describe("visitor filters and keyword", () => {
+    const themeId = "64b7f0c2a1d3e4f5a6b7c8d9";
+    const searchedKeywords: string[] = [];
+    const recordCalls = () => {
+      const calls: FindDisplayedPageOptions[] = [];
+      const dispositifRepository: DispositifRepository = {
+        findDisplayedPage: async (_config, options) => {
+          calls.push(options);
+          return emptyPage;
+        },
+      };
+      return { calls, dispositifRepository };
+    };
+    const appFor = (config: WidgetConfig, dispositifRepository: DispositifRepository) =>
+      buildTestApp({
+        widgetConfigRepository: { findByPublicId: async () => config },
+        dispositifRepository,
+        keywordSearch: {
+          findMatchedDispositifsIds: async (keyword) => {
+            searchedKeywords.push(keyword);
+            return ["b", "a"];
+          },
+        },
+      });
+
+    it("passes the filters allowed by the filter bar, and the ids found for the keyword", async () => {
+      const { calls, dispositifRepository } = recordCalls();
+      const config = {
+        ...activeConfig,
+        filterBarOptions: ["keyword", "location", "theme", "age"],
+      } satisfies WidgetConfig;
+      searchedKeywords.length = 0;
+
+      const response = await appFor(config, dispositifRepository).inject({
+        method: "GET",
+        url: `${url}?search=%20logement%20&departments=Gironde&departments=Paris&themes=${themeId}&ages=-18`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(searchedKeywords).toEqual(["logement"]);
+      expect(calls[0]?.matchedDispositifsIds).toEqual(["b", "a"]);
+      expect(calls[0]?.filters).toEqual({
+        departments: ["Gironde", "Paris"],
+        themes: [new ObjectId(themeId)],
+        ages: ["-18"],
+      });
+    });
+
+    it("ignores the parameters of an option that is not in the filter bar", async () => {
+      const { calls, dispositifRepository } = recordCalls();
+      searchedKeywords.length = 0;
+
+      await appFor(
+        { ...activeConfig, filterBarOptions: ["location"] },
+        dispositifRepository,
+      ).inject({ method: "GET", url: `${url}?search=logement&departments=Gironde&publics=women` });
+
+      expect(searchedKeywords).toEqual([]);
+      expect(calls[0]?.matchedDispositifsIds).toBeUndefined();
+      expect(calls[0]?.filters).toEqual({ departments: ["Gironde"] });
+    });
+
+    it("ignores every parameter when the filter bar is hidden", async () => {
+      const { calls, dispositifRepository } = recordCalls();
+      searchedKeywords.length = 0;
+
+      await appFor({ ...activeConfig, displayFilterBar: false }, dispositifRepository).inject({
+        method: "GET",
+        url: `${url}?search=logement&departments=Gironde`,
+      });
+
+      expect(searchedKeywords).toEqual([]);
+      expect(calls[0]?.filters).toEqual({});
+    });
+
+    it("ignores every parameter for a thumbnail widget", async () => {
+      const { calls, dispositifRepository } = recordCalls();
+      const thumbnail: WidgetConfig = {
+        publicId: activeConfig.publicId,
+        status: "active",
+        type: "thumbnail",
+        authorizedDomains: [],
+        externalTitle: "Une fiche",
+        dispositifId: new ObjectId(),
+      };
+      searchedKeywords.length = 0;
+
+      await appFor(thumbnail, dispositifRepository).inject({
+        method: "GET",
+        url: `${url}?search=logement&departments=Gironde`,
+      });
+
+      expect(searchedKeywords).toEqual([]);
+      expect(calls[0]?.filters).toEqual({});
+    });
+
+    it.each([
+      "publics=martian",
+      "statuses=unknown",
+      "frenchLevels=z",
+      "ages=30",
+      "themes=not-an-id",
+      "languages=fr.content",
+      "departments=",
+      `search=${"a".repeat(101)}`,
+      `departments=${"a".repeat(101)}`,
+      `languages=${Array.from({ length: 31 }, () => "ar").join("&languages=")}`,
+    ])("rejects the query %s", async (query) => {
+      const response = await buildTestApp().inject({ method: "GET", url: `${url}?${query}` });
+      expect(response.statusCode).toBe(400);
+    });
+  });
 
   it("answers the same 404 for an unknown, an inactive and a malformed widget", async () => {
     const inactive = { ...activeConfig, status: "inactive" as const };

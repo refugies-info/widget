@@ -1,4 +1,4 @@
-import type { Document } from "mongodb";
+import type { Document, ObjectId } from "mongodb";
 import type { ListWidgetConfig, WidgetConfigFilters } from "../widgetConfig/widgetConfig.schema.js";
 
 // Copied from karfur (apps/client/src/lib/search-helpers.ts, buildBaseMatch) until the search
@@ -113,21 +113,30 @@ export const buildDispositifMatch = (filters: WidgetConfigFilters): Document => 
  * the excluded ones. A content added by hand does not need to match the filters, but it still has
  * to be published.
  */
-export const buildListWidgetMatch = ({
-  filters,
-  selectedDispositifIds,
-  excludedDispositifIds,
-}: Pick<
-  ListWidgetConfig,
-  "filters" | "selectedDispositifIds" | "excludedDispositifIds"
->): Document => ({
-  $and: [
-    { _id: { $nin: excludedDispositifIds } },
-    {
-      $or: [
-        buildDispositifMatch(filters),
-        { _id: { $in: selectedDispositifIds }, status: "Actif" },
-      ],
-    },
-  ],
-});
+
+export const buildListWidgetMatch = (
+  { filters, selectedDispositifIds, excludedDispositifIds }: Pick<
+    ListWidgetConfig,
+    "filters" | "selectedDispositifIds" | "excludedDispositifIds"
+  >,
+  visitor: { filters?: WidgetConfigFilters; matchedDispositifsIds?: ObjectId[] } = {},
+): Document => {
+  const widgetMatch = {
+    $and: [
+      { _id: { $nin: excludedDispositifIds } },
+      {
+        $or: [
+          buildDispositifMatch(filters),
+          { _id: { $in: selectedDispositifIds }, status: "Actif" },
+        ],
+      },
+    ],
+  };
+
+  const visitorClauses: Document[] = [];
+  const visitorMatch = buildDispositifMatch(visitor.filters ?? {});
+  if (visitorMatch.$and) visitorClauses.push(visitorMatch);
+  if (visitor.matchedDispositifsIds) visitorClauses.push({ _id: { $in: visitor.matchedDispositifsIds } });
+
+  return visitorClauses.length > 0 ? { $and: [widgetMatch, ...visitorClauses] } : widgetMatch;
+};
