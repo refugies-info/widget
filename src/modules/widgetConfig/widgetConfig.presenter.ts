@@ -27,20 +27,16 @@ export type PublicThumbnailWidgetConfig = Pick<
 export type PublicWidgetConfig = PublicListWidgetConfig | PublicThumbnailWidgetConfig;
 
 export const toPublicWidgetConfig = (config: WidgetConfig): PublicWidgetConfig => {
+  const { publicId, authorizedDomains, externalTitle } = config;
+  const commonFields = { publicId, authorizedDomains, externalTitle };
+
   if (config.type === "thumbnail") {
-    return {
-      publicId: config.publicId,
-      type: config.type,
-      authorizedDomains: config.authorizedDomains,
-      externalTitle: config.externalTitle,
-    };
+    return { ...commonFields, type: config.type };
   }
 
   return {
-    publicId: config.publicId,
+    ...commonFields,
     type: config.type,
-    authorizedDomains: config.authorizedDomains,
-    externalTitle: config.externalTitle,
     description: config.displayDescription ? config.description : undefined,
     displayDescription: config.displayDescription,
     pageSize: config.pageSize,
