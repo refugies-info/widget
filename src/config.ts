@@ -4,6 +4,9 @@ const configSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   HOST: z.string().default("0.0.0.0"),
   MONGODB_URI: z.string().min(1),
+  ALGOLIA_APP_ID: z.string().min(1),
+  ALGOLIA_SEARCH_API_KEY: z.string().min(1),
+  ALGOLIA_INDEX_NAME: z.string().min(1),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 
