@@ -91,7 +91,17 @@ The [`Checks`](.github/workflows/checks.yaml) workflow runs the lint, the types,
 - the variable `CLOUD_BUILD_TRIGGER_ID`, the id of the Cloud Build trigger of the environment;
 - the secret `GCP_SA_KEY`, the key of the service account that can run it (or at the repository level).
 
-The Cloud Build triggers have to pass the `VITE_SITE_URL` of their environment to the build and set the variables of the service.
+The Cloud Build trigger of each environment runs [`cloudbuild.yaml`](cloudbuild.yaml): it builds the image, pushes it to Artifact Registry and deploys it to Cloud Run (`widget-staging`, `widget-production`), with the same substitutions as karfur plus:
+
+| Substitution | Description |
+|---|---|
+| `_ENV` | `staging` or `production` (name of the Cloud Run service) |
+| `_SITE_URL` | Site of the environment, given to the front as `VITE_SITE_URL` |
+| `_MONGODB_VAR` | Secret Manager secret holding the `MONGODB_URI` (a read-only user per environment) |
+| `_ALGOLIA_INDEX_VAR` | Secret holding the Algolia index of the environment: the one of the site, `REACT_APP_ALGOLIA_INDEX_STG` or `REACT_APP_ALGOLIA_INDEX_PROD` |
+| `_REGISTRY_URL`, `_REGISTRY`, `_REGION`, `_SA`, `_VPC_CONNECTOR` | Same as the karfur triggers |
+
+Algolia uses what the site already has: the application id (`_ALGOLIA_APP_ID`, `L9HYT1676M` by default) and the **search-only** key of the client of karfur (`_ALGOLIA_SEARCH_API_KEY_VAR`, `REACT_APP_ALGOLIA_API_KEY` by default). Never use the key of the server of karfur, it can write to the index. The service account of the widget only needs the accessor role on its own MongoDB secret and on these two Algolia secrets.
 
 ## Contributing
 
