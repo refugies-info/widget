@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "npm" # Covers pnpm-lock.yaml.
-    directory: "/"
+    directories: ["/", "/front"]
     schedule:
       interval: "weekly"
     cooldown:

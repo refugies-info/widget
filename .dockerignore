@@ -1,0 +1,9 @@
+node_modules
+front/node_modules
+dist
+front/dist
+.env
+front/.env
+.git
+.github
+.claude

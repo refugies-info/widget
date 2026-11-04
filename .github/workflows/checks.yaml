@@ -33,8 +33,17 @@ jobs:
       - name: Check types
         run: pnpm check-types
 
+      - name: Check types of the front
+        run: pnpm check-types:front
+
       - name: Test
         run: pnpm test
 
       - name: Build
         run: pnpm build
+
+      - name: Build the front
+        run: pnpm build:front
+        env:
+          # Any URL: the front of each environment is built at its deployment
+          VITE_SITE_URL: https://refugies.info
