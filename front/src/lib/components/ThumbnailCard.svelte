@@ -5,6 +5,7 @@
   import logoRi from "../assets/logo-ri.svg";
   import illustration from "../assets/thumbnail-illustration.svg";
   import { buildContentUrl } from "../contentUrl.js";
+  import { translate } from "../wording.js";
   import { SITE_URL } from "../siteUrl.js";
 
   let { content, locale }: { content: DisplayedThumbnail; locale: string } = $props();
@@ -15,7 +16,7 @@
   <div class="content">
     <p class="hint">
       <img src={iconHelp} alt="" width="16" height="16" />
-      Cliquer pour lire et écouter les explications traduites
+      {translate(locale, "translateHint")}
     </p>
     <div class="body">
       <h2 class="title">{content.titreInformatif}</h2>
@@ -24,7 +25,7 @@
     <div class="action">
       <p class="source">
         <img src={logoRi} alt="" width="16" height="16" />
-        <span class="source-long">Réfugiés.info : l’information pour les réfugiés en France</span>
+        <span class="source-long">{translate(locale, "sourceLong")}</span>
         <span class="source-short">Réfugiés.info</span>
       </p>
       <img src={arrowRight} alt="" width="24" height="24" />

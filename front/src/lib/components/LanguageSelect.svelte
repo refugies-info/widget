@@ -1,16 +1,19 @@
 <script lang="ts">
     import chevronDown from "../assets/icon-chevron-down.svg";
   import { isLanguageAvailable, type Language } from "../languages.js";
+  import { translate } from "../wording.js";
   import Flag from "./Flag.svelte";
 
   let {
     languages,
     selected,
+    locale,
     availableLanguages,
     onselect,
   }: {
     languages: Language[];
     selected: string;
+    locale: string;
     availableLanguages: string[] | undefined;
     onselect: (code: string) => void;
   } = $props();
@@ -26,7 +29,7 @@
 </script>
 
 <div class="bar">
-  <span class="label">Traduire :</span>
+  <span class="label">{translate(locale, "translateLabel")}</span>
   <div class="select">
     <button
       type="button"

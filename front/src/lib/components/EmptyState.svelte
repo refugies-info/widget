@@ -1,12 +1,15 @@
 <script lang="ts">
   import illustration from "../assets/empty-illustration.svg";
+  import { translate } from "../wording.js";
+
+  let { locale }: { locale: string } = $props();
 </script>
 
 <div class="empty">
   <img class="illustration" src={illustration} alt="" width="323" height="248" />
   <div class="text">
-    <p class="title">Le widget est vide.</p>
-    <p>Choisissez une fiche pour obtenir un aperçu.</p>
+    <p class="title">{translate(locale, "emptyTitle")}</p>
+    <p>{translate(locale, "emptyText")}</p>
   </div>
 </div>
 

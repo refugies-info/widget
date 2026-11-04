@@ -41,6 +41,10 @@
     if (publicId) load(publicId, code);
   };
 
+  $effect(() => {
+    document.documentElement.lang = locale;
+  });
+
   onMount(() => {
     if (publicId) load(publicId, locale);
   });
@@ -53,6 +57,7 @@
       <LanguageBar
         languages={SITE_LANGUAGES}
         selected={locale}
+        {locale}
         availableLanguages={content?.availableLanguages}
         onselect={selectLocale}
       />
@@ -61,6 +66,7 @@
       <LanguageSelect
         languages={SITE_LANGUAGES}
         selected={locale}
+        {locale}
         availableLanguages={content?.availableLanguages}
         onselect={selectLocale}
       />
@@ -68,7 +74,7 @@
     {#if content}
       <ThumbnailCard {content} {locale} />
     {:else}
-      <EmptyState />
+      <EmptyState {locale} />
     {/if}
   </main>
 {/if}

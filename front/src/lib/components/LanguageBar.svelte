@@ -1,22 +1,25 @@
 <script lang="ts">
     import { isLanguageAvailable, type Language } from "../languages.js";
+  import { translate } from "../wording.js";
   import Flag from "./Flag.svelte";
 
   let {
     languages,
     selected,
+    locale,
     availableLanguages,
     onselect,
   }: {
     languages: Language[];
     selected: string;
+    locale: string;
     availableLanguages: string[] | undefined;
     onselect: (code: string) => void;
   } = $props();
 </script>
 
 <div class="bar">
-  <span class="label">Traduire :</span>
+  <span class="label">{translate(locale, "translateLabel")}</span>
   <ul class="languages">
     {#each languages as language (language.code)}
       {@const available = isLanguageAvailable(language.code, availableLanguages)}
