@@ -1,0 +1,53 @@
+@font-face {
+  font-family: "Marianne";
+  font-weight: 400;
+  font-display: swap;
+  src: url("@gouvfr/dsfr/dist/fonts/Marianne-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Marianne";
+  font-weight: 500;
+  font-display: swap;
+  src: url("@gouvfr/dsfr/dist/fonts/Marianne-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Marianne";
+  font-weight: 700;
+  font-display: swap;
+  src: url("@gouvfr/dsfr/dist/fonts/Marianne-Bold.woff2") format("woff2");
+}
+
+:root {
+  --text-title-grey: #161616;
+  --text-default-grey: #3a3a3a;
+  --text-mention-grey: #666;
+  --text-disabled-grey: #929292;
+  --text-action-high-blue-france: #000091;
+  --background-default-grey: #fff;
+  --background-alt-blue-france: #f5f5fe;
+  --background-open-blue-france: #e3e3fd;
+  --background-selected-blue-france: #cecefc;
+  --border-default-grey: #ddd;
+  --shadow-color: rgba(0, 0, 18, 0.16);
+  --widget-breakpoint: 600px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Marianne", Arial, sans-serif;
+  color: var(--text-default-grey);
+  background: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}

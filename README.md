@@ -45,6 +45,12 @@ pnpm dev
 | `HOST` | `0.0.0.0` | Host the server listens on |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent` |
 
+The front (`front/`) has its own variable, read when it is **built** (copy `front/.env.example` to `front/.env` for the local one). The data of an environment comes from its `MONGODB_URI` and `ALGOLIA_INDEX_NAME`; the links of the widgets come from this one, so build the front once per environment:
+
+| Variable | Description |
+|---|---|
+| `VITE_SITE_URL` | Site of the environment: `http://localhost:3000`, `https://staging.refugies.info` or `https://refugies.info`. The build fails without it |
+
 ## Scripts
 
 | Command | Description |

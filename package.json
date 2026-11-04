@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "^5.61.0",
+    "@fastify/static": "^10.1.8",
     "fastify": "^5.12.7",
     "mongodb": "^7.7.0",
     "zod": "^4.6.7"

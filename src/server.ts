@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { connectDatabase } from "./db.js";
@@ -8,13 +9,17 @@ import { createWidgetConfigRepository } from "./modules/widgetConfig/widgetConfi
 
 const config = loadConfig();
 const database = await connectDatabase(config.MONGODB_URI);
-const app = buildApp(config, {
-  database,
-  widgetConfigRepository: createWidgetConfigRepository(database.db),
-  dispositifRepository: createDispositifRepository(database.db),
-  keywordSearch: createKeywordSearch(config),
-  filterOptionsRepository: createFilterOptionsRepository(database.db),
-});
+const frontDirectory = fileURLToPath(new URL("../front/dist", import.meta.url));
+const app = buildApp(
+  { ...config, frontDirectory },
+  {
+    database,
+    widgetConfigRepository: createWidgetConfigRepository(database.db),
+    dispositifRepository: createDispositifRepository(database.db),
+    keywordSearch: createKeywordSearch(config),
+    filterOptionsRepository: createFilterOptionsRepository(database.db),
+  },
+);
 
 const shutdown = async () => {
   await app.close();
