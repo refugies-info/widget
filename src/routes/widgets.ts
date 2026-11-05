@@ -8,12 +8,11 @@ import {
 import { type FilterOptionsRepository } from "../modules/filterOptions/filterOptions.repository.js";
 import { findFilterOptions } from "../modules/filterOptions/filterOptions.service.js";
 import type { KeywordSearch } from "../modules/search/keywordSearch.js";
+import { findActiveWidgetConfig } from "../modules/widgetConfig/findActiveWidgetConfig.js";
 import { toPublicWidgetConfig } from "../modules/widgetConfig/widgetConfig.presenter.js";
 import type { WidgetConfigRepository } from "../modules/widgetConfig/widgetConfig.repository.js";
 
 const MAX_PAGE = 1000;
-
-const paramsSchema = z.object({ publicId: z.uuid() });
 
 const localeSchema = z
   .string()
@@ -36,23 +35,18 @@ export const widgetRoutes: FastifyPluginAsync<{
   app,
   { widgetConfigRepository, dispositifRepository, keywordSearch, filterOptionsRepository },
 ) => {
-  const findActiveWidgetConfig = async (params: unknown) => {
-    const parsedParams = paramsSchema.safeParse(params);
-    if (!parsedParams.success) return null;
-
-    const config = await widgetConfigRepository.findByPublicId(parsedParams.data.publicId);
-    return config?.status === "active" ? config : null;
-  };
+  const findActiveWidget = (params: unknown) =>
+    findActiveWidgetConfig(widgetConfigRepository, params);
 
   app.get("/widgets/:publicId", async (request, reply) => {
-    const config = await findActiveWidgetConfig(request.params);
+    const config = await findActiveWidget(request.params);
     if (!config) return reply.code(404).send({ error: "Not Found" });
 
     return toPublicWidgetConfig(config);
   });
 
   app.get("/widgets/:publicId/dispositifs", async (request, reply) => {
-    const config = await findActiveWidgetConfig(request.params);
+    const config = await findActiveWidget(request.params);
     if (!config) return reply.code(404).send({ error: "Not Found" });
 
     const query = dispositifsQuerySchema.safeParse(request.query);
@@ -73,7 +67,7 @@ export const widgetRoutes: FastifyPluginAsync<{
   });
 
   app.get("/widgets/:publicId/filters", async (request, reply) => {
-    const config = await findActiveWidgetConfig(request.params);
+    const config = await findActiveWidget(request.params);
     if (!config) return reply.code(404).send({ error: "Not Found" });
 
     const query = filterOptionsQuerySchema.safeParse(request.query);

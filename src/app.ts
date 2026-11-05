@@ -5,6 +5,7 @@ import type { DispositifRepository } from "./modules/dispositif/dispositif.repos
 import type { FilterOptionsRepository } from "./modules/filterOptions/filterOptions.repository.js";
 import type { KeywordSearch } from "./modules/search/keywordSearch.js";
 import type { WidgetConfigRepository } from "./modules/widgetConfig/widgetConfig.repository.js";
+import { frontRoutes } from "./routes/front.js";
 import { healthRoutes } from "./routes/health.js";
 import { widgetRoutes } from "./routes/widgets.js";
 
@@ -17,7 +18,7 @@ export interface AppDependencies {
 }
 
 export const buildApp = (
-  config: Pick<Config, "LOG_LEVEL">,
+  config: Pick<Config, "LOG_LEVEL"> & { frontDirectory?: string },
   {
     database,
     widgetConfigRepository,
@@ -34,5 +35,8 @@ export const buildApp = (
     keywordSearch,
     filterOptionsRepository,
   });
+  if (config.frontDirectory) {
+    app.register(frontRoutes, { widgetConfigRepository, frontDirectory: config.frontDirectory });
+  }
   return app;
 };
