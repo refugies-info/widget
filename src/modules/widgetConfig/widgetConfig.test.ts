@@ -38,7 +38,7 @@ const thumbnailConfigDocument = {
   structureName: "Association Exemple",
   authorizedDomains: ["exemple.org"],
   externalTitle: "Demander un titre de voyage",
-  dispositifId: "6710f2a1c3d4e5f607182931",
+  thumbnailDispositifId: "6710f2a1c3d4e5f607182931",
   __v: 0,
 };
 
@@ -58,13 +58,13 @@ describe("thumbnail widget", () => {
   it("accepts a document with only its own fields", () => {
     const parsed = widgetConfigSchema.safeParse(thumbnailConfigDocument);
     expect(parsed.success).toBe(true);
-    expect(parsed.data?.type === "thumbnail" && parsed.data.dispositifId).toEqual(
+    expect(parsed.data?.type === "thumbnail" && parsed.data.thumbnailDispositifId).toEqual(
       new ObjectId("6710f2a1c3d4e5f607182931"),
     );
   });
 
   it("requires the content to display", () => {
-    const { dispositifId: _dispositifId, ...withoutContent } = thumbnailConfigDocument;
+    const { thumbnailDispositifId: _dispositifId, ...withoutContent } = thumbnailConfigDocument;
     expect(widgetConfigSchema.safeParse(withoutContent).success).toBe(false);
   });
 
@@ -90,7 +90,7 @@ describe("toPublicWidgetConfig", () => {
         "filters",
         "selectedDispositifIds",
         "excludedDispositifIds",
-        "dispositifId",
+        "thumbnailDispositifId",
         "createdAt",
         "updatedAt",
       ]) {
@@ -128,7 +128,7 @@ describe("widgetConfigSchema fields", () => {
   const listInternalKeys = ["status", "filters", "selectedDispositifIds", "excludedDispositifIds"];
 
   const thumbnailPublicKeys = commonPublicKeys;
-  const thumbnailInternalKeys = ["status", "dispositifId"];
+  const thumbnailInternalKeys = ["status", "thumbnailDispositifId"];
 
   it("classifies every field of a list widget as public or internal", () => {
     const classified = [...listPublicKeys, ...listInternalKeys].sort();
