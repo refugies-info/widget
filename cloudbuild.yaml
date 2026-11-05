@@ -1,0 +1,63 @@
+# Run by the Cloud Build trigger of an environment (see .github/workflows/deploy.yaml).
+# The substitutions (_ENV, _REGION, _SITE_URL, the names of the secrets...) are set on the trigger.
+steps:
+  # Build the container image. The front is built for the site of the environment.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/${_COMPONENT}:$SHORT_SHA"
+      - "-t"
+      - "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/${_COMPONENT}:latest"
+      - "--build-arg"
+      - "VITE_SITE_URL=${_SITE_URL}"
+      - "-f"
+      - "./Dockerfile"
+      - "."
+
+  # Push the container image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/${_COMPONENT}:$SHORT_SHA"
+
+  # Deploy the container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        # Use array for optional command-line arguments (Google Shell Style Guide)
+        # https://google.github.io/styleguide/shellguide.html#arrays
+        vpc_args=()
+        if [[ -n "${_VPC_CONNECTOR}" ]]; then
+          vpc_args=(--vpc-connector="${_VPC_CONNECTOR}" --vpc-egress=private-ranges-only)
+        fi
+
+        gcloud run deploy ${_COMPONENT}-${_ENV} \
+          --allow-unauthenticated \
+          --image ${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/${_COMPONENT}:$SHORT_SHA \
+          --max-instances ${_MAX_INSTANCES} \
+          --memory ${_MEMORY} \
+          --platform managed \
+          --port 3000 \
+          --project $PROJECT_ID \
+          --region ${_REGION} \
+          --service-account ${_SA} \
+          --set-secrets MONGODB_URI=${_MONGODB_VAR}:latest \
+          --set-env-vars ALGOLIA_APP_ID=${_ALGOLIA_APP_ID} \
+          --set-secrets ALGOLIA_SEARCH_API_KEY=${_ALGOLIA_SEARCH_API_KEY_VAR}:latest \
+          --set-secrets ALGOLIA_INDEX_NAME=${_ALGOLIA_INDEX_VAR}:latest \
+          "${vpc_args[@]}"
+
+# The Algolia values are the ones of the site: its application id (not a secret, it is in the code
+# of karfur), and the secrets of its client (a search-only key, and the index of the environment).
+substitutions:
+  _COMPONENT: widget
+  _ALGOLIA_APP_ID: L9HYT1676M
+  _ALGOLIA_SEARCH_API_KEY_VAR: REACT_APP_ALGOLIA_API_KEY
+  _MAX_INSTANCES: "10"
+  _MEMORY: 512Mi
+
+options:
+  dynamicSubstitutions: true

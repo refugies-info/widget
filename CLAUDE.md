@@ -24,7 +24,7 @@ Backend (Fastify) and front (Svelte) serving the embeddable widgets of refugies.
 ## Commands
 
 - `pnpm dev` / `pnpm build` / `pnpm start`
-- `pnpm lint`, `pnpm check-types`, `pnpm test` — run them for what you touched before committing.
+- `pnpm lint`, `pnpm check-types`, `pnpm test` — run them for what you touched before committing. For the front (`front/`): `pnpm check-types:front` and `pnpm build:front` (needs `VITE_SITE_URL`, see `front/.env.example`).
 - `pnpm format` to apply the Biome formatting.
 
 ## Coding conventions
