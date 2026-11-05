@@ -79,7 +79,7 @@ describe("GET /widgets/:publicId", () => {
       type: "thumbnail",
       authorizedDomains: ["exemple.org"],
       externalTitle: "Demander un titre de voyage",
-      dispositifId: new ObjectId("6710f2a1c3d4e5f607182931"),
+      thumbnailDispositifId: new ObjectId("6710f2a1c3d4e5f607182931"),
     };
     const app = buildTestApp({
       widgetConfigRepository: { findByPublicId: async () => thumbnailConfig },
@@ -301,7 +301,7 @@ describe("GET /widgets/:publicId/dispositifs", () => {
         type: "thumbnail",
         authorizedDomains: [],
         externalTitle: "Une fiche",
-        dispositifId: new ObjectId(),
+        thumbnailDispositifId: new ObjectId(),
       };
       searchedKeywords.length = 0;
 

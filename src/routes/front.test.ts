@@ -14,7 +14,7 @@ const thumbnailConfig: WidgetConfig = {
   type: "thumbnail",
   authorizedDomains: ["exemple.org", "*.partenaire.fr"],
   externalTitle: "Une vignette",
-  dispositifId: "64b7f0c2a1d3e4f5a6b7c8d9" as never,
+  thumbnailDispositifId: "64b7f0c2a1d3e4f5a6b7c8d9" as never,
 };
 
 const frontDirectory = mkdtempSync(join(tmpdir(), "widget-front-"));
