@@ -18,9 +18,15 @@
     "build:front": "pnpm --filter widget-front build",
     "test": "vitest run"
   },
+  "pnpm": {
+    "overrides": {
+      "glob": "14.0.3",
+      "minimatch": "11.0.3"
+    }
+  },
   "dependencies": {
     "@algolia/client-search": "^5.61.0",
-    "@fastify/static": "^10.1.8",
+    "@fastify/static": "^10.1.9",
     "fastify": "^5.12.7",
     "mongodb": "^7.7.0",
     "zod": "^4.6.7"
