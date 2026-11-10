@@ -6,11 +6,15 @@
     FRENCH_LEVEL_SHORT_LABELS,
     type Filters,
     hasActiveFilters,
+    keysOf,
     toggleValue,
   } from "../filters.js";
+  import { toggleDepartment } from "../location.js";
   import { t } from "../wording.js";
+  import ChoiceList from "./ChoiceList.svelte";
   import FilterDropdown from "./FilterDropdown.svelte";
   import Icon from "./Icon.svelte";
+  import LocationPanel from "./LocationPanel.svelte";
   import SearchInput from "./SearchInput.svelte";
 
   let {
@@ -42,18 +46,32 @@
   };
 
   const toggle = (key: FilterKey, value: string) =>
-    onchange({ ...filters, [key]: toggleValue(filters[key], value) });
+    onchange(
+      key === "departments"
+        ? { ...filters, ...toggleDepartment(filters, value) }
+        : { ...filters, [key]: toggleValue(filters[key], value) },
+    );
+
+  const countOf = (configuration: FilterConfiguration) =>
+    keysOf(configuration).reduce((total, key) => total + filters[key].length, 0);
+
+  const clearFilter = (configuration: FilterConfiguration) =>
+    onchange({ ...filters, ...Object.fromEntries(keysOf(configuration).map((key) => [key, []])) });
 
   const selectedTags = $derived(
     configurations.flatMap((configuration) => {
       const choices = optionsOf(configuration);
-      return filters[configuration.key].flatMap((value) => {
-        const label =
-          configuration.key === "frenchLevels"
-            ? FRENCH_LEVEL_SHORT_LABELS[value]
-            : choices.find((choice) => choice.value === value)?.label;
-        return label ? [{ key: configuration.key, value, label }] : [];
-      });
+      return keysOf(configuration).flatMap((key) =>
+        filters[key].flatMap((value) => {
+          const label =
+            key === "frenchLevels"
+              ? FRENCH_LEVEL_SHORT_LABELS[value]
+              : key === "cities"
+                ? value
+                : choices.find((choice) => choice.value === value)?.label;
+          return label ? [{ key, value, label }] : [];
+        }),
+      );
     }),
   );
 
@@ -72,10 +90,25 @@
     {#each configurations as configuration (configuration.key)}
       <FilterDropdown
         label={t(locale, configuration.label)}
-        choices={optionsOf(configuration)}
-        selected={filters[configuration.key]}
-        ontoggle={(value) => toggle(configuration.key, value)}
-      />
+        count={countOf(configuration)}
+        wide={configuration.type === "location"}
+        clearLabel={t(locale, "filterReset", { name: t(locale, configuration.label) })}
+        onclear={() => clearFilter(configuration)}
+      >
+        {#if configuration.type === "location"}
+          <LocationPanel
+            selection={filters}
+            {locale}
+            onchange={(selection) => onchange({ ...filters, ...selection })}
+          />
+        {:else}
+          <ChoiceList
+            choices={optionsOf(configuration)}
+            selected={filters[configuration.key]}
+            ontoggle={(value) => toggle(configuration.key, value)}
+          />
+        {/if}
+      </FilterDropdown>
     {/each}
   </div>
   {#if selectedTags.length > 0 || clearable}

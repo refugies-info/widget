@@ -4,6 +4,7 @@ export const MAX_SELECTED_VALUES = 30;
 
 export type FilterKey =
   | "departments"
+  | "cities"
   | "themes"
   | "statuses"
   | "publics"
@@ -16,6 +17,7 @@ export type Filters = Record<FilterKey, string[]> & { search: string };
 export const emptyFilters = (): Filters => ({
   search: "",
   departments: [],
+  cities: [],
   themes: [],
   statuses: [],
   publics: [],
@@ -100,7 +102,10 @@ export const hasSearch = (filterBarOptions: string[]) => filterBarOptions.includ
 export const enabledFilters = (filterBarOptions: string[]) =>
   FILTER_CONFIGURATIONS.filter(({ type }) => filterBarOptions.includes(type));
 
-export const FILTER_KEYS = FILTER_CONFIGURATIONS.map(({ key }) => key);
+export const keysOf = ({ type, key }: FilterConfiguration): FilterKey[] =>
+  type === "location" ? ["departments", "cities"] : [key];
+
+export const FILTER_KEYS: FilterKey[] = FILTER_CONFIGURATIONS.flatMap(keysOf);
 
 export const hasActiveFilters = (filters: Filters) =>
   filters.search.trim() !== "" || FILTER_KEYS.some((key) => filters[key].length > 0);

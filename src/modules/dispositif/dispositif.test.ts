@@ -33,6 +33,18 @@ describe("buildDispositifMatch", () => {
     expect(regex.test("Saint-Brieuc - Côtes-d'Armor (xx)")).toBe(false);
   });
 
+  it("matches the contents of a city, next to the ones of a department", () => {
+    const { $and } = buildDispositifMatch({ departments: ["Rhône"], cities: ["Saint-Étienne (.*)"] });
+    const [department, city, ...others] = $and[0]["metadatas.location"].$in;
+
+    expect(department.test("Lyon - Rhône")).toBe(true);
+    expect(city.test("Saint-Étienne (.*) - Loire")).toBe(true);
+    expect(city.test("Saint-Étienne (.*)")).toBe(true);
+    expect(city.test("Saint-Étienne - Loire")).toBe(false);
+    expect(city.test("La Saint-Étienne (.*) - Loire")).toBe(false);
+    expect(others).toEqual(["france"]);
+  });
+
   it("matches a theme or a need when both are selected", () => {
     const theme = new ObjectId();
     const need = new ObjectId();

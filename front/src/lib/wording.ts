@@ -44,6 +44,16 @@ export interface Wording {
   filterLanguage: string;
   filtersClear: string;
   filterRemove: string;
+  filterReset: string;
+  locationSearchPlaceholder: string;
+  locationUseMyPosition: string;
+  locationPositionError: string;
+  locationCommonCities: string;
+  locationSelected: string;
+  locationResults: string;
+  locationNoResults: string;
+  locationDepartment: string;
+  locationCity: string;
   statusAsile: string;
   statusRefugie: string;
   statusSubsidiaire: string;

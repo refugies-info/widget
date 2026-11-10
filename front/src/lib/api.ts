@@ -52,7 +52,7 @@ export interface ListPage {
 
 export class WidgetNotFoundError extends Error {}
 
-const getJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
+export const getJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
   const response = await fetch(path, { signal });
   if (response.status === 404) throw new WidgetNotFoundError();
   if (!response.ok) throw new Error(`Request failed (${response.status}): ${path}`);
