@@ -34,6 +34,34 @@ export interface Wording {
   unitHalfDays_other: string;
   noResults: string;
   loadError: string;
+  filterSearch: string;
+  filterLocation: string;
+  filterTheme: string;
+  filterStatus: string;
+  filterPublic: string;
+  filterAge: string;
+  filterFrenchLevel: string;
+  filterLanguage: string;
+  filtersClear: string;
+  filterRemove: string;
+  statusAsile: string;
+  statusRefugie: string;
+  statusSubsidiaire: string;
+  statusTemporaire: string;
+  statusApatride: string;
+  statusFrench: string;
+  publicFamily: string;
+  publicWomen: string;
+  publicYouths: string;
+  publicSenior: string;
+  publicGender: string;
+  ageUnder18: string;
+  age18To25: string;
+  ageOver25: string;
+  frenchLevelAlpha: string;
+  frenchLevelA: string;
+  frenchLevelB: string;
+  frenchLevelC: string;
 }
 
 export type WordingKey = keyof Wording;
