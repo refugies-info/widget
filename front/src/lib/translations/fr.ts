@@ -62,7 +62,7 @@ export const fr: Wording = {
   seeResults_other: "Voir les {count} résultats",
   locationSearchPlaceholder: "Recherche par ville ou département",
   locationUseMyPosition: "Utiliser ma position",
-  locationPositionError: "Votre position n’a pas pu être utilisée. Vérifiez que la géolocalisation est activée pour votre navigateur.",
+  locationPositionError: "Vous devez activer la géolocalisation pour votre navigateur",
   locationCommonCities: "Villes courantes",
   locationSelected: "Localisations sélectionnées",
   locationResults: "Résultats de recherche",

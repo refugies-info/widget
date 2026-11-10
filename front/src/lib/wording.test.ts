@@ -25,7 +25,7 @@ describe("t", () => {
 
 describe("translateExact", () => {
   it("does not fall back on French", () => {
-    expect(translateExact("ar", "cardUpdated")).toBeUndefined();
+    expect(translateExact("ar", "sourceLong")).toBeUndefined();
     expect(translateExact("fr", "cardUpdated")).toBe("Mise à jour");
   });
 });
@@ -43,6 +43,6 @@ describe("translateCount", () => {
   });
 
   it("falls back on French for a language without this wording", () => {
-    expect(translateCount("ti", "resultsCount", 5)).toBe("5 résultats");
+    expect(translateCount("ti", "seeResults", 5)).toBe("Voir les 5 résultats");
   });
 });

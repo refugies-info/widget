@@ -62,7 +62,7 @@ export const en: Partial<Wording> = {
   seeResults_other: "See {count} results",
   locationSearchPlaceholder: "Search by city or department",
   locationUseMyPosition: "Use my location",
-  locationPositionError: "Your location could not be used. Check that location access is allowed for your browser.",
+  locationPositionError: "You must activate geolocation for your browser",
   locationCommonCities: "Common cities",
   locationSelected: "Selected locations",
   locationResults: "Search results",
