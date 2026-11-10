@@ -83,6 +83,7 @@
         {showSearch}
         {filters}
         options={filterOptions.state.status === "ready" ? filterOptions.state.data : undefined}
+        resultCount={request.state.status === "ready" ? request.state.data.total : undefined}
         {locale}
         onchange={(next) => (filters = next)}
         onclear={() => (filters = emptyFilters())}

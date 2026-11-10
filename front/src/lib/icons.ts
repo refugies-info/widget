@@ -4,6 +4,8 @@ import arrowRight from "@gouvfr/dsfr/dist/icons/arrows/arrow-right-line.svg";
 import arrowRightSmall from "@gouvfr/dsfr/dist/icons/arrows/arrow-right-s-line.svg";
 import building from "@gouvfr/dsfr/dist/icons/buildings/building-line.svg";
 import sendPlane from "@gouvfr/dsfr/dist/icons/business/send-plane-fill.svg";
+import equalizer from "@gouvfr/dsfr/dist/icons/media/equalizer-line.svg";
+import check from "@gouvfr/dsfr/dist/icons/system/check-line.svg";
 import euro from "@gouvfr/dsfr/dist/icons/finance/money-euro-circle-line.svg";
 import closeCircle from "@gouvfr/dsfr/dist/icons/system/close-circle-fill.svg";
 import close from "@gouvfr/dsfr/dist/icons/system/close-line.svg";
@@ -17,8 +19,10 @@ export const ICONS = {
   "arrow-right": arrowRight,
   "arrow-right-small": arrowRightSmall,
   building,
+  check,
   close,
   "close-circle": closeCircle,
+  equalizer,
   euro,
   question,
   search,
