@@ -26,16 +26,16 @@
   },
   "dependencies": {
     "@algolia/client-search": "^5.61.0",
-    "@fastify/static": "^10.1.9",
-    "fastify": "^5.12.7",
-    "mongodb": "^7.7.0",
+    "@fastify/static": "^10.1.10",
+    "fastify": "^5.12.8",
+    "mongodb": "^7.8.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.3",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }
