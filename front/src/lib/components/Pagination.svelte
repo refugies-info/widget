@@ -1,6 +1,6 @@
 <script lang="ts">
   import { buildPageItems } from "../pagination.js";
-  import { translate } from "../wording.js";
+  import { t } from "../wording.js";
   import Icon from "./Icon.svelte";
 
   let {
@@ -14,16 +14,16 @@
   const items = $derived(buildPageItems(page, pageCount));
 </script>
 
-<nav class="pagination" aria-label={translate(locale, "paginationLabel")}>
+<nav class="pagination" aria-label={t(locale, "paginationLabel")}>
   <button
     type="button"
     class="step"
     disabled={page <= 1}
-    aria-label={translate(locale, "previousPage")}
+    aria-label={t(locale, "previousPage")}
     onclick={() => onchange(page - 1)}
   >
     <Icon name="arrow-left" flipInRtl />
-    <span class="step-label">{translate(locale, "previousPage")}</span>
+    <span class="step-label">{t(locale, "previousPage")}</span>
   </button>
   <ul class="pages">
     {#each items as item, index (item === "ellipsis" ? `ellipsis-${index}` : item)}
@@ -35,7 +35,7 @@
             type="button"
             class="number"
             class:current={item === page}
-            aria-label={translate(locale, "pageLabel", { page: item })}
+            aria-label={t(locale, "pageLabel", { page: item })}
             aria-current={item === page ? "page" : undefined}
             onclick={() => onchange(item)}
           >
@@ -49,10 +49,10 @@
     type="button"
     class="step"
     disabled={page >= pageCount}
-    aria-label={translate(locale, "nextPage")}
+    aria-label={t(locale, "nextPage")}
     onclick={() => onchange(page + 1)}
   >
-    <span class="step-label">{translate(locale, "nextPage")}</span>
+    <span class="step-label">{t(locale, "nextPage")}</span>
     <Icon name="arrow-right-small" flipInRtl />
   </button>
 </nav>

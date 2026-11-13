@@ -8,7 +8,7 @@
   import { SITE_LANGUAGES } from "./lib/languages.js";
   import { plainText } from "./lib/text.js";
   import { useRequest } from "./lib/useRequest.svelte.js";
-  import { translate, translateCount } from "./lib/wording.js";
+  import { t, translateCount } from "./lib/wording.js";
 
   let {
     config,
@@ -39,7 +39,7 @@
       <LanguageSelect
         languages={SITE_LANGUAGES}
         selected={locale}
-        label={translate(locale, "translateInLabel")}
+        label={t(locale, "translateInLabel")}
         availableLanguages={undefined}
         inline
         onselect={onselectlocale}
@@ -49,7 +49,7 @@
 
   <section class="results" aria-busy={request.busy}>
     {#if request.state.status === "error"}
-      <EmptyState title={translate(locale, "loadError")} />
+      <EmptyState title={t(locale, "loadError")} />
     {:else if request.state.status === "loading"}
       <ul class="grid" aria-hidden="true">
         {#each { length: Math.min(config.pageSize, 8) } as _, index (index)}
@@ -60,7 +60,7 @@
       {@const data = request.state.data}
       <p class="count" aria-live="polite">{translateCount(locale, "resultsCount", data.total)}</p>
       {#if data.items.length === 0}
-        <EmptyState title={translate(locale, "noResults")} />
+        <EmptyState title={t(locale, "noResults")} />
       {:else}
         <ul class="grid">
           {#each data.items as card (card.id)}

@@ -6,7 +6,7 @@
   import ThumbnailCard from "./lib/components/ThumbnailCard.svelte";
   import { SITE_LANGUAGES } from "./lib/languages.js";
   import { useRequest } from "./lib/useRequest.svelte.js";
-  import { translate } from "./lib/wording.js";
+  import { t } from "./lib/wording.js";
 
   let {
     publicId,
@@ -17,9 +17,9 @@
   const request = useRequest((signal) => fetchThumbnail(publicId, locale, signal));
 </script>
 
-{#if request.state.status === "error"}
+{#if "error" === request.state.status}
   <main class="widget">
-    <EmptyState title={translate(locale, "loadError")} />
+    <EmptyState title={t(locale, "loadError")} />
   </main>
 {:else if request.state.status === "ready"}
   {@const content = request.state.data}
@@ -37,7 +37,7 @@
       <LanguageSelect
         languages={SITE_LANGUAGES}
         selected={locale}
-        label={translate(locale, "translateLabel")}
+        label={t(locale, "translateLabel")}
         availableLanguages={content?.availableLanguages}
         onselect={onselectlocale}
       />
@@ -45,7 +45,7 @@
     {#if content}
       <ThumbnailCard {content} {locale} />
     {:else}
-      <EmptyState title={translate(locale, "emptyTitle")} text={translate(locale, "emptyText")} />
+      <EmptyState title={t(locale, "emptyTitle")} text={t(locale, "emptyText")} />
     {/if}
   </main>
 {/if}

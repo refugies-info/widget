@@ -3,7 +3,7 @@
   import logoRi from "../assets/logo-ri.svg";
   import illustration from "../assets/thumbnail-illustration.svg";
   import { buildContentUrl } from "../contentUrl.js";
-  import { translate } from "../wording.js";
+  import { t } from "../wording.js";
   import Icon from "./Icon.svelte";
   import { SITE_URL } from "../siteUrl.js";
 
@@ -15,7 +15,7 @@
   <div class="content">
     <p class="hint">
       <Icon name="question" />
-      {translate(locale, "translateHint")}
+      {t(locale, "translateHint")}
     </p>
     <div class="body">
       <h2 class="title">{content.titreInformatif}</h2>
@@ -24,7 +24,7 @@
     <div class="action">
       <p class="source">
         <img src={logoRi} alt="" width="16" height="16" />
-        <span class="source-long">{translate(locale, "sourceLong")}</span>
+        <span class="source-long">{t(locale, "sourceLong")}</span>
         <span class="source-short">Réfugiés.info</span>
       </p>
       <span class="arrow"><Icon name="arrow-right" size={24} flipInRtl /></span>

@@ -54,7 +54,7 @@ const WORDING: Record<string, Partial<Wording>> & { fr: Wording } = {
 const interpolate = (text: string, values?: Values) =>
   values ? text.replace(/\{(\w+)\}/g, (placeholder, name) => String(values[name] ?? placeholder)) : text;
 
-export const translate = (locale: string, key: WordingKey, values?: Values) =>
+export const t = (locale: string, key: WordingKey, values?: Values) =>
   interpolate(WORDING[locale]?.[key] || WORDING.fr[key], values);
 
 export const translateExact = (locale: string, key: WordingKey) => WORDING[locale]?.[key] || undefined;
@@ -72,5 +72,5 @@ export const translateCount = (locale: string, base: PluralBase, count: number) 
     dictionary?.[pluralKey(base, "other")];
   return text
     ? interpolate(text, { count })
-    : translate("fr", pluralKey(base, pluralCategory("fr", count)), { count });
+    : t("fr", pluralKey(base, pluralCategory("fr", count)), { count });
 };

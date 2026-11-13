@@ -1,13 +1,13 @@
 <script lang="ts">
   import logo from "../assets/logo-ri.svg";
   import { SITE_URL } from "../siteUrl.js";
-  import { translate } from "../wording.js";
+  import { t } from "../wording.js";
 
   let { locale }: { locale: string } = $props();
 
   const SITE_MARK = "\u0001";
   const [before = "", after = ""] = $derived(
-    translate(locale, "baseline", { site: SITE_MARK }).split(SITE_MARK),
+    t(locale, "baseline", { site: SITE_MARK }).split(SITE_MARK),
   );
 </script>
 

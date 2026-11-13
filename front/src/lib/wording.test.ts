@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { translate, translateCount, translateExact } from "./wording.js";
+import { t, translateCount, translateExact } from "./wording.js";
 
-describe("translate", () => {
+describe("t", () => {
   it("translates a wording in the language of the visitor", () => {
-    expect(translate("en", "translateLabel")).toBe("Translate:");
+    expect(t("en", "translateLabel")).toBe("Translate:");
   });
 
   it("shows the French wording while a language has no translation for it", () => {
-    expect(translate("ar", "emptyTitle")).toBe("Le widget est vide.");
+    expect(t("ar", "emptyTitle")).toBe("Le widget est vide.");
   });
 
   it("shows the French wording while the translation of a language is an empty string", () => {
-    expect(translate("ar", "sourceLong")).toBe(translate("fr", "sourceLong"));
+    expect(t("ar", "sourceLong")).toBe(t("fr", "sourceLong"));
   });
 
   it("falls back on French for a language the widget does not know", () => {
-    expect(translate("de", "translateLabel")).toBe("Traduire :");
+    expect(t("de", "translateLabel")).toBe("Traduire :");
   });
 
   it("fills the placeholders", () => {
-    expect(translate("fr", "pageLabel", { page: 3 })).toBe("Page 3");
+    expect(t("fr", "pageLabel", { page: 3 })).toBe("Page 3");
   });
 });
 

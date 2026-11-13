@@ -1,6 +1,6 @@
 import type { DisplayedCard } from "./api.js";
 import { capitalize } from "./text.js";
-import { translate, translateCount, translateExact } from "./wording.js";
+import { t, translateCount, translateExact } from "./wording.js";
 
 const INTL_UNITS: Record<string, { unit: "hour" | "day" | "week" | "month" | "year"; factor: number }> = {
   hours: { unit: "hour", factor: 1 },
@@ -17,7 +17,7 @@ const WORDED_UNITS = { sessions: "unitSessions", "half-days": "unitHalfDays" } a
 export const formatPrice = (price: DisplayedCard["price"], locale: string) => {
   const [min, max] = price?.values ?? [];
   if (min === undefined) return null;
-  if (min === 0) return capitalize(translate(locale, "cardFree"), locale);
+  if (min === 0) return capitalize(t(locale, "cardFree"), locale);
 
   const euro = new Intl.NumberFormat(locale, {
     style: "currency",
@@ -50,7 +50,7 @@ export const formatCommitment = (commitment: DisplayedCard["commitment"], locale
 
 export const formatUpdate = (date: string, locale: string, now = Date.now()) => {
   const deltaDays = Math.round((new Date(date).getTime() - now) / (24 * 60 * 60 * 1000));
-  if (Math.abs(deltaDays) >= 365) return translate(locale, "cardUpdatedOverYear");
+  if (Math.abs(deltaDays) >= 365) return t(locale, "cardUpdatedOverYear");
 
   const since =
     Math.abs(deltaDays) < 30
@@ -72,18 +72,18 @@ export const buildBadge = (
   locale: string,
 ): Badge | null => {
   if (typeContenu === "demarche") {
-    return { text: translate(locale, "badgeProcedure"), kind: "procedure" };
+    return { text: t(locale, "badgeProcedure"), kind: "procedure" };
   }
   if (location === "france") {
-    return { text: capitalize(translate(locale, "locationFrance"), locale), kind: "place" };
+    return { text: capitalize(t(locale, "locationFrance"), locale), kind: "place" };
   }
   if (location === "online") {
-    return { text: capitalize(translate(locale, "locationOnline"), locale), kind: "place" };
+    return { text: capitalize(t(locale, "locationOnline"), locale), kind: "place" };
   }
   if (!Array.isArray(location) || location[0] === undefined) return null;
 
   if (location.length > 1) {
-    const departments = translate(locale, "locationDepartments").toLocaleLowerCase(locale);
+    const departments = t(locale, "locationDepartments").toLocaleLowerCase(locale);
     return { text: `${location.length} ${departments}`, kind: "place" };
   }
   // "75 - Paris" is shown "Paris 75"
