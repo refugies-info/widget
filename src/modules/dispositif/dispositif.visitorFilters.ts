@@ -5,8 +5,8 @@ import {
   WIDGET_CONFIG_AGES,
   WIDGET_CONFIG_FRENCH_LEVELS,
   type WidgetConfig,
-  type WidgetConfigFilters,
 } from "../widgetConfig/widgetConfig.schema.js";
+import type { MatchFilters } from "./dispositif.match.js";
 
 const PUBLICS = ["family", "women", "youths", "senior", "gender"] as const;
 const STATUSES = ["asile", "refugie", "subsidiaire", "temporaire", "apatride", "french"] as const;
@@ -28,6 +28,7 @@ const objectIdParam = z
 export const visitorFiltersQuerySchema = z.object({
   search: z.string().trim().max(MAX_SEARCH_LENGTH).optional(),
   departments: list(z.enum(DEPARTMENT_NAMES)),
+  cities: list(z.string().trim().min(1).max(MAX_SEARCH_LENGTH)),
   themes: list(objectIdParam),
   publics: list(z.enum(PUBLICS)),
   statuses: list(z.enum(STATUSES)),
@@ -40,19 +41,19 @@ type VisitorFiltersQuery = z.infer<typeof visitorFiltersQuerySchema>;
 
 // The parameter of the route each option of the filter bar unlocks
 const PARAMETER_BY_OPTION = {
-  keyword: "search",
-  location: "departments",
-  theme: "themes",
-  public: "publics",
-  status: "statuses",
-  frenchLevel: "frenchLevels",
-  age: "ages",
-  language: "languages",
-} as const satisfies Record<string, keyof VisitorFiltersQuery>;
+  keyword: ["search"],
+  location: ["departments", "cities"],
+  theme: ["themes"],
+  public: ["publics"],
+  status: ["statuses"],
+  frenchLevel: ["frenchLevels"],
+  age: ["ages"],
+  language: ["languages"],
+} as const satisfies Record<string, readonly (keyof VisitorFiltersQuery)[]>;
 
 export interface VisitorFilters {
   keyword?: string;
-  filters: WidgetConfigFilters;
+  filters: MatchFilters;
 }
 
 export const pickEnabledVisitorFilters = (
@@ -62,12 +63,12 @@ export const pickEnabledVisitorFilters = (
   if (config.type !== "list" || !config.displayFilterBar) return { filters: {} };
 
   const enabled = new Set<string>(
-    config.filterBarOptions.map((option) => PARAMETER_BY_OPTION[option]),
+    config.filterBarOptions.flatMap((option) => PARAMETER_BY_OPTION[option]),
   );
   const { search, ...filters } = query;
   const kept = Object.fromEntries(
     Object.entries(filters).filter(([parameter]) => enabled.has(parameter)),
-  ) as WidgetConfigFilters;
+  ) as MatchFilters;
 
   return {
     keyword: enabled.has("search") && search ? search : undefined,

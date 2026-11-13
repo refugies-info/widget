@@ -1,3 +1,5 @@
+import { buildListQuery, type Filters } from "./filters.js";
+
 export interface PublicThumbnailWidgetConfig {
   publicId: string;
   type: "thumbnail";
@@ -50,7 +52,7 @@ export interface ListPage {
 
 export class WidgetNotFoundError extends Error {}
 
-const getJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
+export const getJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
   const response = await fetch(path, { signal });
   if (response.status === 404) throw new WidgetNotFoundError();
   if (!response.ok) throw new Error(`Request failed (${response.status}): ${path}`);
@@ -68,5 +70,21 @@ export const fetchThumbnail = async (publicId: string, locale: string, signal?: 
   return page.items[0] ?? null;
 };
 
-export const fetchList = (publicId: string, locale: string, page: number, signal?: AbortSignal) =>
-  getJson<ListPage>(`/widgets/${publicId}/dispositifs?locale=${locale}&page=${page}`, signal);
+export const fetchList = (
+  publicId: string,
+  { locale, page, filters }: { locale: string; page: number; filters: Filters },
+  signal?: AbortSignal,
+) =>
+  getJson<ListPage>(
+    `/widgets/${publicId}/dispositifs?${buildListQuery(locale, page, filters)}`,
+    signal,
+  );
+
+export interface FilterOptions {
+  departments?: string[];
+  themes?: { id: string; name: string; color: string | null }[];
+  languages?: { code: string; name: string; localName: string | null }[];
+}
+
+export const fetchFilterOptions = (publicId: string, locale: string, signal?: AbortSignal) =>
+  getJson<FilterOptions>(`/widgets/${publicId}/filters?locale=${locale}`, signal);

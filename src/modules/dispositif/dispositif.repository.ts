@@ -3,9 +3,8 @@ import type {
   ListWidgetConfig,
   ThumbnailWidgetConfig,
   WidgetConfig,
-  WidgetConfigFilters,
 } from "../widgetConfig/widgetConfig.schema.js";
-import { buildListWidgetMatch } from "./dispositif.match.js";
+import { buildListWidgetMatch, type MatchFilters } from "./dispositif.match.js";
 import {
   buildKeywordRankStages,
   buildPresentationStages,
@@ -27,7 +26,7 @@ export interface ListDispositifsPage {
 export interface FindDisplayedPageOptions {
   page: number;
   locale: string;
-  filters?: WidgetConfigFilters;
+  filters?: MatchFilters;
   matchedDispositifsIds?: string[];
 }
 
