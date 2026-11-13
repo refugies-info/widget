@@ -1,0 +1,31 @@
+import type { Wording } from "../wording.js";
+
+// To translate: an empty string shows the French wording
+export const ti: Wording = {
+  translateLabel: "",
+  translateHint: "",
+  sourceLong: "",
+  emptyTitle: "",
+  emptyText: "",
+  translateInLabel: "",
+  resultsCount_one: "",
+  resultsCount_other: "",
+  previousPage: "",
+  nextPage: "",
+  pageLabel: "",
+  paginationLabel: "",
+  baseline: "",
+  cardFree: "",
+  cardUpdated: "",
+  cardUpdatedOverYear: "",
+  badgeProcedure: "",
+  locationFrance: "",
+  locationOnline: "",
+  locationDepartments: "",
+  unitSessions_one: "",
+  unitSessions_other: "",
+  unitHalfDays_one: "",
+  unitHalfDays_other: "",
+  noResults: "",
+  loadError: "",
+};

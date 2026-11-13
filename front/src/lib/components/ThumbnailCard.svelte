@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { DisplayedThumbnail } from "../api.js";
-  import arrowRight from "../assets/icon-arrow-right.svg";
-  import iconHelp from "../assets/icon-help.svg";
   import logoRi from "../assets/logo-ri.svg";
   import illustration from "../assets/thumbnail-illustration.svg";
   import { buildContentUrl } from "../contentUrl.js";
-  import { translate } from "../wording.js";
+  import { t } from "../wording.js";
+  import Icon from "./Icon.svelte";
   import { SITE_URL } from "../siteUrl.js";
 
   let { content, locale }: { content: DisplayedThumbnail; locale: string } = $props();
@@ -15,8 +14,8 @@
   <img class="media" src={illustration} alt="" />
   <div class="content">
     <p class="hint">
-      <img src={iconHelp} alt="" width="16" height="16" />
-      {translate(locale, "translateHint")}
+      <Icon name="question" />
+      {t(locale, "translateHint")}
     </p>
     <div class="body">
       <h2 class="title">{content.titreInformatif}</h2>
@@ -25,10 +24,10 @@
     <div class="action">
       <p class="source">
         <img src={logoRi} alt="" width="16" height="16" />
-        <span class="source-long">{translate(locale, "sourceLong")}</span>
+        <span class="source-long">{t(locale, "sourceLong")}</span>
         <span class="source-short">Réfugiés.info</span>
       </p>
-      <img src={arrowRight} alt="" width="24" height="24" />
+      <span class="arrow"><Icon name="arrow-right" size={24} flipInRtl /></span>
     </div>
   </div>
 </a>
@@ -75,7 +74,7 @@
     color: var(--text-mention-grey);
   }
 
-  .hint img {
+  .hint :global(.icon) {
     margin-top: 2px;
   }
 
@@ -129,9 +128,10 @@
     display: none;
   }
 
-  .action img:last-child {
+  .arrow {
+    display: flex;
     flex: none;
-    transform: var(--arrow-transform, none);
+    color: var(--text-action-high-blue-france);
   }
 
   /* Wide container: the illustration sits next to the text */
