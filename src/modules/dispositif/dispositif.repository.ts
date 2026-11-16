@@ -44,7 +44,7 @@ const findThumbnail = async (
 ): Promise<ListDispositifsPage> => {
   const docs = await collection
     .aggregate([
-      { $match: { _id: config.thumbnailDispositifId, status: "Actif" } },
+      { $match: { _id: config.dispositifId, status: "Actif" } },
       ...buildPresentationStages(locale, "thumbnail"),
     ])
     .toArray();
