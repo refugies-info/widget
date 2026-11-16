@@ -1,15 +1,14 @@
 <script lang="ts">
   import illustration from "../assets/empty-illustration.svg";
-  import { translate } from "../wording.js";
 
-  let { locale }: { locale: string } = $props();
+  let { title, text }: { title: string; text?: string } = $props();
 </script>
 
 <div class="empty">
   <img class="illustration" src={illustration} alt="" width="323" height="248" />
   <div class="text">
-    <p class="title">{translate(locale, "emptyTitle")}</p>
-    <p>{translate(locale, "emptyText")}</p>
+    <p class="title">{title}</p>
+    {#if text}<p>{text}</p>{/if}
   </div>
 </div>
 

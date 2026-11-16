@@ -1,20 +1,21 @@
 <script lang="ts">
-    import chevronDown from "../assets/icon-chevron-down.svg";
   import { isLanguageAvailable, type Language } from "../languages.js";
-  import { translate } from "../wording.js";
   import Flag from "./Flag.svelte";
+  import Icon from "./Icon.svelte";
 
   let {
     languages,
     selected,
-    locale,
+    label,
     availableLanguages,
+    inline = false,
     onselect,
   }: {
     languages: Language[];
     selected: string;
-    locale: string;
+    label: string;
     availableLanguages: string[] | undefined;
+    inline?: boolean;
     onselect: (code: string) => void;
   } = $props();
 
@@ -28,8 +29,8 @@
   };
 </script>
 
-<div class="bar">
-  <span class="label">{translate(locale, "translateLabel")}</span>
+<div class="bar" class:inline>
+  <span class="label">{label}</span>
   <div class="select">
     <button
       type="button"
@@ -40,7 +41,7 @@
     >
       <Flag flagCode={current?.flagCode} />
       <span class="current">{current?.label}</span>
-      <img src={chevronDown} alt="" width="16" height="16" />
+      <span class="chevron"><Icon name="arrow-down" /></span>
     </button>
     {#if open}
       <ul class="options" role="listbox">
@@ -74,12 +75,23 @@
     background: var(--background-default-grey);
   }
 
+  .bar.inline {
+    padding: 0;
+    gap: 8px;
+  }
+
   .label {
     font-size: 12px;
     line-height: 20px;
     font-weight: 700;
     color: var(--text-mention-grey);
     white-space: nowrap;
+  }
+
+  .inline .label {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
   }
 
   .select {
@@ -96,6 +108,16 @@
     cursor: pointer;
   }
 
+  .inline .trigger {
+    padding: 5px 10px;
+    border-width: 1.25px;
+  }
+
+  .chevron {
+    display: flex;
+    color: var(--text-action-high-blue-france);
+  }
+
   .current {
     font-size: 14px;
     line-height: 24px;
@@ -104,10 +126,15 @@
     white-space: nowrap;
   }
 
+  .inline .current {
+    font-size: 17.5px;
+    line-height: 30px;
+  }
+
   .options {
     position: absolute;
     inset-inline-end: 0;
-    z-index: 1;
+    z-index: 2;
     min-width: 100%;
     max-height: 240px;
     margin: 4px 0 0;
