@@ -10,9 +10,11 @@
     toggleValue,
   } from "../filters.js";
   import { toggleDepartment } from "../location.js";
-  import { t } from "../wording.js";
+  import { t, translateCount } from "../wording.js";
   import ChoiceList from "./ChoiceList.svelte";
   import FilterDropdown from "./FilterDropdown.svelte";
+  import FilterPill from "./FilterPill.svelte";
+  import FiltersDialog from "./FiltersDialog.svelte";
   import Icon from "./Icon.svelte";
   import LocationPanel from "./LocationPanel.svelte";
   import SearchInput from "./SearchInput.svelte";
@@ -22,6 +24,7 @@
     showSearch,
     filters,
     options,
+    resultCount,
     locale,
     onchange,
     onclear,
@@ -30,6 +33,7 @@
     showSearch: boolean;
     filters: Filters;
     options: FilterOptions | undefined;
+    resultCount: number | undefined;
     locale: string;
     onchange: (filters: Filters) => void;
     onclear: () => void;
@@ -76,6 +80,9 @@
   );
 
   const clearable = $derived(hasActiveFilters(filters));
+  const activeGroupCount = $derived(configurations.filter((configuration) => countOf(configuration) > 0).length);
+
+  let panelOpen = $state(false);
 </script>
 
 <div class="filters">
@@ -87,29 +94,38 @@
         oninput={(search) => onchange({ ...filters, search })}
       />
     {/if}
-    {#each configurations as configuration (configuration.key)}
-      <FilterDropdown
-        label={t(locale, configuration.label)}
-        count={countOf(configuration)}
-        wide={configuration.type === "location"}
-        clearLabel={t(locale, "filterReset", { name: t(locale, configuration.label) })}
-        onclear={() => clearFilter(configuration)}
-      >
-        {#if configuration.type === "location"}
-          <LocationPanel
-            selection={filters}
-            {locale}
-            onchange={(selection) => onchange({ ...filters, ...selection })}
-          />
-        {:else}
-          <ChoiceList
-            choices={optionsOf(configuration)}
-            selected={filters[configuration.key]}
-            ontoggle={(value) => toggle(configuration.key, value)}
-          />
-        {/if}
-      </FilterDropdown>
-    {/each}
+    <div class="dropdowns">
+      {#each configurations as configuration (configuration.key)}
+        <FilterDropdown
+          label={t(locale, configuration.label)}
+          count={countOf(configuration)}
+          wide={configuration.type === "location"}
+          clearLabel={t(locale, "filterReset", { name: t(locale, configuration.label) })}
+          onclear={() => clearFilter(configuration)}
+        >
+          {#if configuration.type === "location"}
+            <LocationPanel
+              selection={filters}
+              {locale}
+              onchange={(selection) => onchange({ ...filters, ...selection })}
+            />
+          {:else}
+            <ChoiceList
+              choices={optionsOf(configuration)}
+              selected={filters[configuration.key]}
+              ontoggle={(value) => toggle(configuration.key, value)}
+            />
+          {/if}
+        </FilterDropdown>
+      {/each}
+    </div>
+    {#if configurations.length > 0}
+      <button type="button" class="open-panel" onclick={() => (panelOpen = true)}>
+        <Icon name="equalizer" />
+        <span>{t(locale, "filtersTitle")}</span>
+        {#if activeGroupCount > 0}<span class="badge">{activeGroupCount}</span>{/if}
+      </button>
+    {/if}
   </div>
   {#if selectedTags.length > 0 || clearable}
     <div class="selected">
@@ -135,6 +151,43 @@
   {/if}
 </div>
 
+{#if configurations.length > 0}
+  <FiltersDialog
+    open={panelOpen}
+    title={t(locale, "filtersTitle")}
+    closeLabel={t(locale, "filtersClose")}
+    clearLabel={t(locale, "filtersClear")}
+    submitLabel={resultCount === undefined ? t(locale, "filtersClose") : translateCount(locale, "seeResults", resultCount)}
+    onclose={() => (panelOpen = false)}
+    onclear={onclear}
+  >
+    <div class="sections">
+      {#each configurations as configuration (configuration.key)}
+        <section>
+          <h3>{t(locale, configuration.label)}</h3>
+          {#if configuration.type === "location"}
+            <LocationPanel
+              selection={filters}
+              {locale}
+              onchange={(selection) => onchange({ ...filters, ...selection })}
+            />
+          {:else}
+            <div class="pills">
+              {#each optionsOf(configuration) as option (option.value)}
+                <FilterPill
+                  label={option.label}
+                  active={filters[configuration.key].includes(option.value)}
+                  ontoggle={() => toggle(configuration.key, option.value)}
+                />
+              {/each}
+            </div>
+          {/if}
+        </section>
+      {/each}
+    </div>
+  </FiltersDialog>
+{/if}
+
 <style>
   .filters {
     display: flex;
@@ -147,6 +200,78 @@
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .dropdowns {
+    display: contents;
+  }
+
+  .open-panel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 8px 16px;
+    background: var(--background-default-grey);
+    border: 1px solid var(--border-default-grey);
+    border-radius: 28px;
+    font: inherit;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    color: var(--text-title-grey);
+    cursor: pointer;
+  }
+
+  .open-panel:focus-visible {
+    outline: 2px solid var(--text-action-high-blue-france);
+    outline-offset: 2px;
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    background: var(--text-action-high-blue-france);
+    border-radius: 10px;
+    font-size: 12px;
+    color: #fff;
+  }
+
+  .sections {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 700;
+    color: var(--text-default-grey);
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 8px;
+  }
+
+  /* Narrow: the filters open in a panel */
+  @container widget (max-width: 599px) {
+    .dropdowns {
+      display: none;
+    }
+  }
+
+  @container widget (min-width: 600px) {
+    .open-panel {
+      display: none;
+    }
   }
 
   .selected {

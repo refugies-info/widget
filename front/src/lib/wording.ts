@@ -45,6 +45,10 @@ export interface Wording {
   filtersClear: string;
   filterRemove: string;
   filterReset: string;
+  filtersTitle: string;
+  filtersClose: string;
+  seeResults_one: string;
+  seeResults_other: string;
   locationSearchPlaceholder: string;
   locationUseMyPosition: string;
   locationPositionError: string;
@@ -75,7 +79,7 @@ export interface Wording {
 }
 
 export type WordingKey = keyof Wording;
-type PluralBase = "resultsCount" | "unitSessions" | "unitHalfDays";
+type PluralBase = "resultsCount" | "seeResults" | "unitSessions" | "unitHalfDays";
 type Values = Record<string, string | number>;
 
 const WORDING: Record<string, Partial<Wording>> & { fr: Wording } = {

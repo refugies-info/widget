@@ -62,6 +62,12 @@
     color: var(--text-mention-grey);
   }
 
+  @container widget (max-width: 599px) {
+    .search {
+      width: 100%;
+    }
+  }
+
   input::-webkit-search-cancel-button {
     display: none;
   }
