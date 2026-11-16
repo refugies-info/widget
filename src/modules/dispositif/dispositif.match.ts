@@ -50,15 +50,18 @@ const ageConditions: Record<string, Document> = {
   "+25": { $gt: [minAgeExpression, 25] },
 };
 
-const buildLocationClause = (departments: string[]): Document => {
+const buildLocationClause = (departments: string[], cities: string[]): Document => {
   const tokensOrRegexes: (string | RegExp)[] = departments.map((department) =>
     department === "france" || department === "online" || department.includes(" - ")
       ? department
       : new RegExp(` - ${escapeRegExp(department)}$`, "i"),
   );
+  for (const city of cities) tokensOrRegexes.push(new RegExp(`^${escapeRegExp(city)}(?: - |$)`, "i"));
   tokensOrRegexes.push("france");
   return { "metadatas.location": { $in: tokensOrRegexes } };
 };
+
+export type MatchFilters = WidgetConfigFilters & { cities?: string[] };
 
 const isNotBlank = (value: string): boolean => value.trim().length > 0;
 
@@ -66,11 +69,13 @@ const isNotBlank = (value: string): boolean => value.trim().length > 0;
  * MongoDB filter of the published contents matching the filters of a widget: the values of a
  * category are OR-ed, the categories are AND-ed, an empty category does not filter.
  */
-export const buildDispositifMatch = (filters: WidgetConfigFilters): Document => {
+export const buildDispositifMatch = (filters: MatchFilters): Document => {
   const clauses: Document[] = [];
 
   const departments = (filters.departments ?? []).filter(isNotBlank);
-  if (departments.length > 0) clauses.push(buildLocationClause(departments));
+  const cities = (filters.cities ?? []).filter(isNotBlank);
+  if (departments.length > 0 || cities.length > 0)
+    clauses.push(buildLocationClause(departments, cities));
 
   const themes = filters.themes ?? [];
   const needs = filters.needs ?? [];
@@ -120,7 +125,7 @@ export const buildListWidgetMatch = (
     selectedDispositifIds,
     excludedDispositifIds,
   }: Pick<ListWidgetConfig, "filters" | "selectedDispositifIds" | "excludedDispositifIds">,
-  visitor: { filters?: WidgetConfigFilters; matchedDispositifsIds?: ObjectId[] } = {},
+  visitor: { filters?: MatchFilters; matchedDispositifsIds?: ObjectId[] } = {},
 ): Document => {
   const widgetMatch = {
     $and: [

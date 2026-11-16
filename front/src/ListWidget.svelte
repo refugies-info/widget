@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { fetchList, type PublicListWidgetConfig } from "./lib/api.js";
+  import { fetchFilterOptions, fetchList, type PublicListWidgetConfig } from "./lib/api.js";
   import Baseline from "./lib/components/Baseline.svelte";
   import DispositifCard from "./lib/components/DispositifCard.svelte";
   import EmptyState from "./lib/components/EmptyState.svelte";
+  import FilterBar from "./lib/components/FilterBar.svelte";
   import LanguageSelect from "./lib/components/LanguageSelect.svelte";
   import Pagination from "./lib/components/Pagination.svelte";
+  import { emptyFilters, enabledFilters, hasSearch, sameFilters } from "./lib/filters.js";
   import { SITE_LANGUAGES } from "./lib/languages.js";
   import { plainText } from "./lib/text.js";
   import { useRequest } from "./lib/useRequest.svelte.js";
@@ -23,8 +25,35 @@
   } = $props();
 
   let page = $state(1);
+  let filters = $state(emptyFilters());
+  let applied = $state(emptyFilters());
 
-  const request = useRequest((signal) => fetchList(publicId, locale, page, signal));
+  $effect(() => {
+    const next = $state.snapshot(filters);
+    if (sameFilters(next, applied)) return;
+    const keywordOnly = sameFilters({ ...next, search: applied.search }, applied);
+    const timer = setTimeout(
+      () => {
+        applied = next;
+        page = 1;
+      },
+      keywordOnly ? 300 : 0,
+    );
+    return () => clearTimeout(timer);
+  });
+
+  const configurations = $derived(config.displayFilterBar ? enabledFilters(config.filterBarOptions) : []);
+  const showSearch = $derived(config.displayFilterBar && hasSearch(config.filterBarOptions));
+  const needsOptions = $derived(
+    configurations.some(({ key }) => key === "departments" || key === "themes" || key === "languages"),
+  );
+
+  const request = useRequest((signal) =>
+    fetchList(publicId, { locale, page, filters: applied }, signal),
+  );
+  const filterOptions = useRequest((signal) =>
+    needsOptions ? fetchFilterOptions(publicId, locale, signal) : Promise.resolve({}),
+  );
 
   const description = $derived(config.displayDescription ? plainText(config.description) : "");
 </script>
@@ -46,6 +75,20 @@
       />
     </div>
   </header>
+
+  {#if configurations.length > 0 || showSearch}
+    <div class="filters">
+      <FilterBar
+        {configurations}
+        {showSearch}
+        {filters}
+        options={filterOptions.state.status === "ready" ? filterOptions.state.data : undefined}
+        {locale}
+        onchange={(next) => (filters = next)}
+        onclear={() => (filters = emptyFilters())}
+      />
+    </div>
+  {/if}
 
   <section class="results" aria-busy={request.busy}>
     {#if request.state.status === "error"}
@@ -87,6 +130,7 @@
   }
 
   .header,
+  .filters,
   .results,
   .footer {
     padding-inline: clamp(16px, 8cqw, 120px);
@@ -122,6 +166,10 @@
     color: var(--text-default-grey);
   }
 
+  .filters {
+    padding-top: 24px;
+  }
+
   .results {
     padding-top: 24px;
   }
@@ -134,10 +182,15 @@
     color: var(--text-title-grey);
   }
 
+  /* As many columns as fit with 260px at least per card, and 4 at most */
   .grid {
+    --gap: 24px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, max(260px, calc((100% - 3 * var(--gap)) / 4))), 1fr)
+    );
+    gap: var(--gap);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -192,6 +245,11 @@
     .description {
       font-size: 18px;
       line-height: 28px;
+    }
+
+    .filters,
+    .results {
+      padding-top: 40px;
     }
   }
 </style>
