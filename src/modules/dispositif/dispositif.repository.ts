@@ -42,6 +42,8 @@ const findThumbnail = async (
   config: ThumbnailWidgetConfig,
   locale: string,
 ): Promise<ListDispositifsPage> => {
+  if (!config.dispositifId) return { items: [], total: 0, page: 1, pageCount: 0 };
+
   const docs = await collection
     .aggregate([
       { $match: { _id: config.dispositifId, status: "Actif" } },
