@@ -63,9 +63,9 @@ describe("thumbnail widget", () => {
     );
   });
 
-  it("requires the content to display", () => {
+  it("accepts a thumbnail whose content is not chosen yet", () => {
     const { dispositifId: _dispositifId, ...withoutContent } = thumbnailConfigDocument;
-    expect(widgetConfigSchema.safeParse(withoutContent).success).toBe(false);
+    expect(widgetConfigSchema.safeParse(withoutContent).success).toBe(true);
   });
 
   it("rejects an unknown widget type", () => {
