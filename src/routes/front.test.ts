@@ -14,7 +14,7 @@ const thumbnailConfig: WidgetConfig = {
   type: "thumbnail",
   authorizedDomains: ["exemple.org", "*.partenaire.fr"],
   externalTitle: "Une vignette",
-  thumbnailDispositifId: "64b7f0c2a1d3e4f5a6b7c8d9" as never,
+  dispositifId: "64b7f0c2a1d3e4f5a6b7c8d9" as never,
 };
 
 const frontDirectory = mkdtempSync(join(tmpdir(), "widget-front-"));
@@ -61,6 +61,15 @@ describe("GET /w/:publicId", () => {
 });
 
 describe("buildFrameAncestors", () => {
+  it("also lets the editor origins embed the page, to preview the widget", () => {
+    expect(buildFrameAncestors(["exemple.org"], ["http://localhost:3001"])).toBe(
+      "frame-ancestors https://exemple.org http://localhost:3001",
+    );
+    expect(buildFrameAncestors([], ["https://bomo.refugies.info"])).toBe(
+      "frame-ancestors https://bomo.refugies.info",
+    );
+  });
+
   it("forbids every site when no domain is authorized", () => {
     expect(buildFrameAncestors([])).toBe("frame-ancestors 'none'");
   });

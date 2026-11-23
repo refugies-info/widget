@@ -64,7 +64,7 @@ const listWidgetConfigSchema = z.object({
 const thumbnailWidgetConfigSchema = z.object({
   ...baseWidgetConfigShape,
   type: z.literal("thumbnail"),
-  thumbnailDispositifId: objectIdSchema,
+  dispositifId: objectIdSchema.optional(),
 });
 
 export const widgetConfigSchema = z.discriminatedUnion("type", [

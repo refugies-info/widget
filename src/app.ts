@@ -18,7 +18,7 @@ export interface AppDependencies {
 }
 
 export const buildApp = (
-  config: Pick<Config, "LOG_LEVEL"> & { frontDirectory?: string },
+  config: Pick<Config, "LOG_LEVEL"> & { EDITOR_ORIGINS?: string[]; frontDirectory?: string },
   {
     database,
     widgetConfigRepository,
@@ -36,7 +36,11 @@ export const buildApp = (
     filterOptionsRepository,
   });
   if (config.frontDirectory) {
-    app.register(frontRoutes, { widgetConfigRepository, frontDirectory: config.frontDirectory });
+    app.register(frontRoutes, {
+      widgetConfigRepository,
+      frontDirectory: config.frontDirectory,
+      editorOrigins: config.EDITOR_ORIGINS ?? [],
+    });
   }
   return app;
 };

@@ -6,17 +6,22 @@ import type { WidgetConfigRepository } from "../modules/widgetConfig/widgetConfi
 const AUTHORIZED_DOMAIN_PATTERN =
   /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$/i;
 
-export const buildFrameAncestors = (authorizedDomains: string[]) => {
-  const sources = authorizedDomains
-    .filter((domain) => AUTHORIZED_DOMAIN_PATTERN.test(domain))
-    .map((domain) => `https://${domain}`);
+/** The editors (Bomo) embed the page too, to preview the widget. */
+export const buildFrameAncestors = (authorizedDomains: string[], editorOrigins: string[] = []) => {
+  const sources = [
+    ...authorizedDomains
+      .filter((domain) => AUTHORIZED_DOMAIN_PATTERN.test(domain))
+      .map((domain) => `https://${domain}`),
+    ...editorOrigins,
+  ];
   return `frame-ancestors ${sources.length > 0 ? sources.join(" ") : "'none'"}`;
 };
 
 export const frontRoutes: FastifyPluginAsync<{
   widgetConfigRepository: WidgetConfigRepository;
   frontDirectory: string;
-}> = async (app, { widgetConfigRepository, frontDirectory }) => {
+  editorOrigins: string[];
+}> = async (app, { widgetConfigRepository, frontDirectory, editorOrigins }) => {
   await app.register(fastifyStatic, { root: frontDirectory, index: false });
 
   // The iframe page: only the sites listed in the widget can embed it
@@ -25,7 +30,7 @@ export const frontRoutes: FastifyPluginAsync<{
     if (!config) return reply.code(404).send({ error: "Not Found" });
 
     return reply
-      .header("Content-Security-Policy", buildFrameAncestors(config.authorizedDomains))
+      .header("Content-Security-Policy", buildFrameAncestors(config.authorizedDomains, editorOrigins))
       .sendFile("index.html");
   });
 };

@@ -1,103 +1,34 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import {
-    type DisplayedThumbnail,
-    fetchThumbnail,
-    fetchWidgetConfig,
-    WidgetNotFoundError,
-  } from "./lib/api.js";
-  import EmptyState from "./lib/components/EmptyState.svelte";
-  import LanguageBar from "./lib/components/LanguageBar.svelte";
-  import LanguageSelect from "./lib/components/LanguageSelect.svelte";
-  import ThumbnailCard from "./lib/components/ThumbnailCard.svelte";
-  import { isRtl, SITE_LANGUAGES } from "./lib/languages.js";
+  import { fetchWidgetConfig, WidgetNotFoundError } from "./lib/api.js";
+  import { isRtl } from "./lib/languages.js";
   import { readInitialLocale, readPublicId } from "./lib/locale.js";
-
-  type State =
-    | { status: "loading" }
-    | { status: "unavailable" }
-    | { status: "ready"; content: DisplayedThumbnail | null };
+  import { useRequest } from "./lib/useRequest.svelte.js";
+  import ListWidget from "./ListWidget.svelte";
+  import ThumbnailWidget from "./ThumbnailWidget.svelte";
 
   const publicId = readPublicId(window.location.pathname);
   let locale = $state(readInitialLocale(window.location.search));
-  let view = $state<State>({ status: publicId ? "loading" : "unavailable" });
 
-  const load = async (id: string, requestedLocale: string) => {
-    try {
-      const config = await fetchWidgetConfig(id);
-      if (config.type !== "thumbnail") {
-        view = { status: "unavailable" };
-        return;
-      }
-      view = { status: "ready", content: await fetchThumbnail(id, requestedLocale) };
-    } catch (error) {
-      if (!(error instanceof WidgetNotFoundError)) console.error(error);
-      view = { status: "unavailable" };
-    }
-  };
+  const request = useRequest((signal) =>
+    publicId ? fetchWidgetConfig(publicId, signal) : Promise.reject(new WidgetNotFoundError()),
+  );
 
   const selectLocale = (code: string) => {
     locale = code;
-    if (publicId) load(publicId, code);
   };
 
   $effect(() => {
     document.documentElement.lang = locale;
   });
-
-  onMount(() => {
-    if (publicId) load(publicId, locale);
-  });
 </script>
 
-{#if view.status === "ready"}
-  {@const { content } = view}
-  <main class="widget" dir={isRtl(locale) ? "rtl" : "ltr"}>
-    <div class="language-bar">
-      <LanguageBar
-        languages={SITE_LANGUAGES}
-        selected={locale}
-        {locale}
-        availableLanguages={content?.availableLanguages}
-        onselect={selectLocale}
-      />
-    </div>
-    <div class="language-select">
-      <LanguageSelect
-        languages={SITE_LANGUAGES}
-        selected={locale}
-        {locale}
-        availableLanguages={content?.availableLanguages}
-        onselect={selectLocale}
-      />
-    </div>
-    {#if content}
-      <ThumbnailCard {content} {locale} />
+{#if publicId && request.state.status === "ready"}
+  {@const config = request.state.data}
+  <div dir={isRtl(locale) ? "rtl" : "ltr"}>
+    {#if config.type === "thumbnail"}
+      <ThumbnailWidget {publicId} {locale} onselectlocale={selectLocale} />
     {:else}
-      <EmptyState {locale} />
+      <ListWidget {config} {publicId} {locale} onselectlocale={selectLocale} />
     {/if}
-  </main>
+  </div>
 {/if}
-
-<style>
-  .widget {
-    container: widget / inline-size;
-    border: 1px solid var(--border-default-grey);
-    background: var(--background-default-grey);
-    box-shadow: 0 4px 6px var(--shadow-color);
-  }
-
-  .language-bar {
-    display: none;
-  }
-
-  @container widget (min-width: 600px) {
-    .language-bar {
-      display: block;
-    }
-
-    .language-select {
-      display: none;
-    }
-  }
-</style>

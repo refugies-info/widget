@@ -3,9 +3,8 @@ import type {
   ListWidgetConfig,
   ThumbnailWidgetConfig,
   WidgetConfig,
-  WidgetConfigFilters,
 } from "../widgetConfig/widgetConfig.schema.js";
-import { buildListWidgetMatch } from "./dispositif.match.js";
+import { buildListWidgetMatch, type MatchFilters } from "./dispositif.match.js";
 import {
   buildKeywordRankStages,
   buildPresentationStages,
@@ -27,7 +26,7 @@ export interface ListDispositifsPage {
 export interface FindDisplayedPageOptions {
   page: number;
   locale: string;
-  filters?: WidgetConfigFilters;
+  filters?: MatchFilters;
   matchedDispositifsIds?: string[];
 }
 
@@ -43,9 +42,11 @@ const findThumbnail = async (
   config: ThumbnailWidgetConfig,
   locale: string,
 ): Promise<ListDispositifsPage> => {
+  if (!config.dispositifId) return { items: [], total: 0, page: 1, pageCount: 0 };
+
   const docs = await collection
     .aggregate([
-      { $match: { _id: config.thumbnailDispositifId, status: "Actif" } },
+      { $match: { _id: config.dispositifId, status: "Actif" } },
       ...buildPresentationStages(locale, "thumbnail"),
     ])
     .toArray();
