@@ -42,6 +42,7 @@ To work on the front with hot reload, run `pnpm --filter widget-front dev` next 
 | Variable | Default | Description |
 |---|---|---|
 | `MONGODB_URI` | — (required) | MongoDB connection string, with the database name |
+| `EDITOR_ORIGINS` | empty | Comma-separated origins (`https://bomo.refugies.info`, no path) that can also frame the page `/w/:publicId`, for the preview of the editor. A value that is not an origin stops the server at startup |
 | `ALGOLIA_APP_ID` | — (required) | Algolia application id |
 | `ALGOLIA_SEARCH_API_KEY` | — (required) | Algolia **search-only** key, never the admin key |
 | `ALGOLIA_INDEX_NAME` | — (required) | Algolia index of the environment (production or staging) |
