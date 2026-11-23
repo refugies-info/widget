@@ -100,6 +100,7 @@ The Cloud Build trigger of each environment runs [`cloudbuild.yaml`](cloudbuild.
 | `_SITE_URL` | Site of the environment, given to the front as `VITE_SITE_URL` |
 | `_MONGODB_VAR` | Secret Manager secret holding the `MONGODB_URI` (a read-only user per environment) |
 | `_ALGOLIA_INDEX_VAR` | Secret holding the Algolia index of the environment: the one of the site, `REACT_APP_ALGOLIA_INDEX_STG` or `REACT_APP_ALGOLIA_INDEX_PROD` |
+| `_EDITOR_ORIGINS` | Origin of the editor (`EDITOR_ORIGINS` of the service), e.g. `https://bomo.refugies.info`. Set it here, not on the service: `--set-env-vars` replaces the variables of the service at every deploy |
 | `_REGISTRY_URL`, `_REGISTRY`, `_REGION`, `_SA`, `_VPC_CONNECTOR` | Same as the karfur triggers |
 
 Algolia uses what the site already has: the application id (`_ALGOLIA_APP_ID`, `L9HYT1676M` by default) and the **search-only** key of the client of karfur (`_ALGOLIA_SEARCH_API_KEY_VAR`, `REACT_APP_ALGOLIA_API_KEY` by default). Never use the key of the server of karfur, it can write to the index. The service account of the widget only needs the accessor role on its own MongoDB secret and on these two Algolia secrets.
