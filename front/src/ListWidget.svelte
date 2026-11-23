@@ -222,11 +222,14 @@
     background: linear-gradient(var(--background-alt-blue-france) 0 16px, transparent 16px 32px, var(--background-alt-blue-france) 32px 48px);
   }
 
-  @container widget (min-width: 600px) {
+  /* `.list` is the container: a container query cannot style it, but the iframe is as wide as the widget */
+  @media (min-width: 600px) {
     .list {
-      padding-top: 56px;
+      padding-block: 40px;
     }
+  }
 
+  @container widget (min-width: 600px) {
     .header {
       flex-direction: row;
       justify-content: space-between;
