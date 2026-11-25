@@ -47,6 +47,12 @@ describe("widgetConfigSchema", () => {
     expect(widgetConfigSchema.safeParse(widgetConfigDocument).success).toBe(true);
   });
 
+  it("accepts a deleted widget, so that it can be answered with a 404", () => {
+    expect(
+      widgetConfigSchema.safeParse({ ...widgetConfigDocument, status: "deleted" }).success,
+    ).toBe(true);
+  });
+
   it("rejects a document with an unknown status", () => {
     expect(widgetConfigSchema.safeParse({ ...widgetConfigDocument, status: "draft" }).success).toBe(
       false,

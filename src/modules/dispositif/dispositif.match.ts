@@ -56,9 +56,20 @@ const buildLocationClause = (departments: string[], cities: string[]): Document 
       ? department
       : new RegExp(` - ${escapeRegExp(department)}$`, "i"),
   );
-  for (const city of cities) tokensOrRegexes.push(new RegExp(`^${escapeRegExp(city)}(?: - |$)`, "i"));
+  for (const city of cities)
+    tokensOrRegexes.push(new RegExp(`^${escapeRegExp(city)}(?: - |$)`, "i"));
   tokensOrRegexes.push("france");
   return { "metadatas.location": { $in: tokensOrRegexes } };
+};
+
+const buildContentTypeClause = (
+  contentTypes: NonNullable<WidgetConfigFilters["contentTypes"]>,
+): Document | null => {
+  if (contentTypes.includes("demarche") && contentTypes.includes("dispositif")) return null;
+  const clauses = contentTypes.map((contentType) =>
+    contentType === "online" ? { "metadatas.location": "online" } : { typeContenu: contentType },
+  );
+  return clauses.length > 0 ? { $or: clauses } : null;
 };
 
 export type MatchFilters = WidgetConfigFilters & { cities?: string[] };
@@ -108,7 +119,8 @@ export const buildDispositifMatch = (filters: MatchFilters): Document => {
     });
   }
 
-  if (filters.contentTypes?.length === 1) clauses.push({ typeContenu: filters.contentTypes[0] });
+  const contentTypeClause = buildContentTypeClause(filters.contentTypes ?? []);
+  if (contentTypeClause) clauses.push(contentTypeClause);
 
   return clauses.length > 0 ? { status: "Actif", $and: clauses } : { status: "Actif" };
 };

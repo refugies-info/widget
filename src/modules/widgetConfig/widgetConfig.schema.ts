@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 
-export const WIDGET_CONFIG_STATUSES = ["active", "inactive"] as const;
+export const WIDGET_CONFIG_STATUSES = ["active", "inactive", "deleted"] as const;
 export const WIDGET_CONFIG_TYPES = ["list", "thumbnail"] as const;
 export const WIDGET_CONFIG_SORT_OPTIONS = ["date", "views", "theme", "location"] as const;
 export const WIDGET_CONFIG_FILTER_BAR_OPTIONS = [
@@ -15,7 +15,7 @@ export const WIDGET_CONFIG_FILTER_BAR_OPTIONS = [
   "language",
 ] as const;
 
-export const WIDGET_CONFIG_CONTENT_TYPES = ["dispositif", "demarche"] as const;
+export const WIDGET_CONFIG_CONTENT_TYPES = ["dispositif", "demarche", "online"] as const;
 export const WIDGET_CONFIG_AGES = ["-18", "18-25", "+25"] as const;
 export const WIDGET_CONFIG_FRENCH_LEVELS = ["alpha", "a", "b", "c"] as const;
 
