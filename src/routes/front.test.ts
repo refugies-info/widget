@@ -45,11 +45,13 @@ describe("GET /w/:publicId", () => {
     );
   });
 
-  it("answers the same 404 for an unknown, an inactive and a malformed widget", async () => {
+  it("answers the same 404 for an unknown, an inactive, a deleted and a malformed widget", async () => {
     const inactive = { ...thumbnailConfig, status: "inactive" as const };
+    const deleted = { ...thumbnailConfig, status: "deleted" as const };
     const responses = await Promise.all([
       buildFrontApp().inject({ method: "GET", url: "/w/00000000-0000-4000-8000-000000000000" }),
       buildFrontApp(inactive).inject({ method: "GET", url: `/w/${publicId}` }),
+      buildFrontApp(deleted).inject({ method: "GET", url: `/w/${publicId}` }),
       buildFrontApp().inject({ method: "GET", url: "/w/not-a-uuid" }),
     ]);
 

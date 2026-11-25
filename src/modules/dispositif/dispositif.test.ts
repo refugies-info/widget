@@ -34,7 +34,10 @@ describe("buildDispositifMatch", () => {
   });
 
   it("matches the contents of a city, next to the ones of a department", () => {
-    const { $and } = buildDispositifMatch({ departments: ["Rhône"], cities: ["Saint-Étienne (.*)"] });
+    const { $and } = buildDispositifMatch({
+      departments: ["Rhône"],
+      cities: ["Saint-Étienne (.*)"],
+    });
     const [department, city, ...others] = $and[0]["metadatas.location"].$in;
 
     expect(department.test("Lyon - Rhône")).toBe(true);
@@ -81,11 +84,17 @@ describe("buildDispositifMatch", () => {
     expect($and[0].$expr.$or).toHaveLength(2);
   });
 
-  it("filters on a single content type only", () => {
+  it("ORs the content types, online resources being matched by their location", () => {
     expect(buildDispositifMatch({ contentTypes: ["demarche"] }).$and).toEqual([
-      { typeContenu: "demarche" },
+      { $or: [{ typeContenu: "demarche" }] },
     ]);
-    expect(buildDispositifMatch({ contentTypes: ["demarche", "dispositif"] })).toEqual({
+    expect(buildDispositifMatch({ contentTypes: ["dispositif", "online"] }).$and).toEqual([
+      { $or: [{ typeContenu: "dispositif" }, { "metadatas.location": "online" }] },
+    ]);
+  });
+
+  it("does not filter the type when demarches and dispositifs are selected", () => {
+    expect(buildDispositifMatch({ contentTypes: ["demarche", "dispositif", "online"] })).toEqual({
       status: "Actif",
     });
   });
