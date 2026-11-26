@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DisplayedCard } from "../api.js";
   import { buildBadge, formatCommitment, formatPrice, formatUpdate } from "../cardFormat.js";
-  import { buildContentUrl } from "../contentUrl.js";
+  import { buildContentUrl, buildImageUrl } from "../contentUrl.js";
   import { plainText } from "../text.js";
   import { SITE_URL } from "../siteUrl.js";
   import Icon from "./Icon.svelte";
@@ -12,7 +12,9 @@
   const titleId = `card-title-${uid}`;
   const url = $derived(buildContentUrl(SITE_URL, card, locale));
   const badge = $derived(buildBadge(card, locale));
-  const image = $derived(card.theme?.imageUrl);
+  const image = $derived(
+    card.theme?.imageUrl ? buildImageUrl(SITE_URL, card.theme.imageUrl) : null,
+  );
   const logo = $derived(card.sponsor?.pictureUrl);
   const isProcedure = $derived(card.typeContenu === "demarche");
   const price = $derived(formatPrice(card.price, locale));
