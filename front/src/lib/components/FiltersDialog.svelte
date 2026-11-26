@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { setHostFullscreen } from "../hostPage.js";
   import Icon from "./Icon.svelte";
 
   let {
@@ -30,6 +31,12 @@
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
+  });
+
+  $effect(() => {
+    if (!open) return;
+    setHostFullscreen(true);
+    return () => setHostFullscreen(false);
   });
 
   $effect(() => {

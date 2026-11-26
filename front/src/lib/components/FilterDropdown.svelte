@@ -61,7 +61,7 @@
     </button>
   {/if}
   {#if open}
-    <div class="panel" class:wide id={panelId} role="group" aria-label={label}>
+    <div class="panel" class:wide id={panelId} role="group" aria-label={label} data-widget-overlay>
       {@render children()}
     </div>
   {/if}
