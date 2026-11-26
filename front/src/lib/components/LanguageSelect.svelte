@@ -44,7 +44,7 @@
       <span class="chevron"><Icon name="arrow-down" /></span>
     </button>
     {#if open}
-      <ul class="options" role="listbox">
+      <ul class="options" role="listbox" data-widget-overlay>
         {#each languages as language (language.code)}
           {@const available = isLanguageAvailable(language.code, availableLanguages)}
           <li role="option" aria-selected={language.code === selected}>

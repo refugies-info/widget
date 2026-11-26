@@ -19,6 +19,24 @@ The contents route of a `list` widget also takes the filters of the visitor, one
 
 `GET /widgets/:publicId/filters?locale=fr` returns the values of the dropdowns of the filter bar, only for the enabled options: `departments` (a fixed list), `themes` (`id`, `name` in the locale with a French fallback, `color`) and `languages` (`code`, `name`, `localName`). The themes and the languages are read from MongoDB.
 
+## Embedding a widget
+
+The editor gives the partners this code, the iframe followed by the resize script:
+
+```html
+<iframe src="https://<widget-origin>/w/<publicId>" title="Widget Refugies.info" width="100%" height="800" style="border:0" allow="geolocation" loading="lazy"></iframe>
+<script src="https://<widget-origin>/embed.js" async></script>
+```
+
+[`embed.js`](front/public/embed.js) is served by this service, so a fix reaches every partner without changing their page. It is the same for every type of widget, and including it several times is fine. It listens to the messages of its own origin, sent by one of the iframes of the page:
+
+| Message | Effect |
+|---|---|
+| `{ type: "widget-height", height }` | Sets the height of the iframe. The height includes the open menus |
+| `{ type: "widget-fullscreen", active }` | Shows the iframe over the whole screen (599px wide at most) while the filters dialog of the mobile layout is open |
+
+The script sends `widget-height-request` to ask for the height again, in case it loaded after the widget. The widget sends its messages to any parent (`"*"`): they only hold a height and a flag, and `frame-ancestors` already limits who can embed it. When the script is blocked (CSP of the partner site, or a CMS that removes scripts), the iframe keeps its height of 800px. A partner with a CSP must allow the origin of the widget in `script-src` and `frame-src`.
+
 ## Identifying a widget
 
 A widget is identified by its `publicId`, a random UUID with a unique index, meant for the embed code. The Mongo `_id` is never exposed.
