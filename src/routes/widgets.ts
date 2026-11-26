@@ -9,6 +9,7 @@ import { type FilterOptionsRepository } from "../modules/filterOptions/filterOpt
 import { findFilterOptions } from "../modules/filterOptions/filterOptions.service.js";
 import type { KeywordSearch } from "../modules/search/keywordSearch.js";
 import { findActiveWidgetConfig } from "../modules/widgetConfig/findActiveWidgetConfig.js";
+import { shouldRecordTraffic } from "../modules/widgetConfig/traffic.js";
 import { toPublicWidgetConfig } from "../modules/widgetConfig/widgetConfig.presenter.js";
 import type { WidgetConfigRepository } from "../modules/widgetConfig/widgetConfig.repository.js";
 
@@ -18,6 +19,8 @@ const localeSchema = z
   .string()
   .regex(/^[a-z]{2,3}$/)
   .default("fr");
+
+const previewQuerySchema = z.object({ preview: z.literal("1") });
 
 const filterOptionsQuerySchema = z.object({ locale: localeSchema });
 
@@ -41,6 +44,16 @@ export const widgetRoutes: FastifyPluginAsync<{
   app.get("/widgets/:publicId", async (request, reply) => {
     const config = await findActiveWidget(request.params);
     if (!config) return reply.code(404).send({ error: "Not Found" });
+
+    const isPreview = previewQuerySchema.safeParse(request.query).success;
+    const now = new Date();
+    if (!isPreview && shouldRecordTraffic(config.lastTrafficAt, now)) {
+      await widgetConfigRepository
+        .recordTraffic(config.publicId, now)
+        .catch((error: unknown) =>
+          app.log.warn({ data: { publicId: config.publicId }, err: error }, "[recordTraffic]"),
+        );
+    }
 
     return toPublicWidgetConfig(config);
   });

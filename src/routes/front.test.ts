@@ -25,7 +25,10 @@ const buildFrontApp = (config: WidgetConfig | null = thumbnailConfig) =>
     { LOG_LEVEL: "silent", frontDirectory },
     {
       database: { ping: async () => true },
-      widgetConfigRepository: { findByPublicId: async (id) => (id === publicId ? config : null) },
+      widgetConfigRepository: {
+        recordTraffic: async () => {},
+        findByPublicId: async (id) => (id === publicId ? config : null),
+      },
       dispositifRepository: {
         findDisplayedPage: async () => ({ items: [], total: 0, page: 1, pageCount: 0 }),
       },

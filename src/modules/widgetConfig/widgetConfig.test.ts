@@ -99,6 +99,7 @@ describe("toPublicWidgetConfig", () => {
         "dispositifId",
         "createdAt",
         "updatedAt",
+        "lastTrafficAt",
       ]) {
         expect(keys).not.toContain(internalKey);
       }
@@ -131,10 +132,16 @@ describe("widgetConfigSchema fields", () => {
     "displayFilterBar",
     "filterBarOptions",
   ];
-  const listInternalKeys = ["status", "filters", "selectedDispositifIds", "excludedDispositifIds"];
+  const commonInternalKeys = ["status", "lastTrafficAt"];
+  const listInternalKeys = [
+    ...commonInternalKeys,
+    "filters",
+    "selectedDispositifIds",
+    "excludedDispositifIds",
+  ];
 
   const thumbnailPublicKeys = commonPublicKeys;
-  const thumbnailInternalKeys = ["status", "dispositifId"];
+  const thumbnailInternalKeys = [...commonInternalKeys, "dispositifId"];
 
   it("classifies every field of a list widget as public or internal", () => {
     const classified = [...listPublicKeys, ...listInternalKeys].sort();

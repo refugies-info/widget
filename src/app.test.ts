@@ -33,6 +33,7 @@ const buildTestApp = (overrides: Partial<AppDependencies> = {}) =>
     {
       database: { ping: async () => true },
       widgetConfigRepository: {
+        recordTraffic: async () => {},
         findByPublicId: async (publicId) =>
           publicId === activeConfig.publicId ? activeConfig : null,
       },
@@ -54,6 +55,65 @@ describe("GET /health", () => {
     const app = buildTestApp({ database: { ping: async () => false } });
     const response = await app.inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(503);
+  });
+});
+
+describe("traffic of a widget", () => {
+  const visit = async ({
+    config = activeConfig,
+    query = "",
+    recordTraffic = async () => {},
+  }: {
+    config?: WidgetConfig;
+    query?: string;
+    recordTraffic?: () => Promise<void>;
+  } = {}) => {
+    const recordedIds: string[] = [];
+    const app = buildTestApp({
+      widgetConfigRepository: {
+        findByPublicId: async () => config,
+        recordTraffic: async (publicId) => {
+          recordedIds.push(publicId);
+          await recordTraffic();
+        },
+      },
+    });
+    const response = await app.inject({
+      method: "GET",
+      url: `/widgets/${config.publicId}${query}`,
+    });
+    return { response, recordedIds };
+  };
+
+  it("is recorded when the config of an active widget is loaded", async () => {
+    const { recordedIds } = await visit();
+    expect(recordedIds).toEqual([activeConfig.publicId]);
+  });
+
+  it("is not recorded for the preview of the editor", async () => {
+    const { response, recordedIds } = await visit({ query: "?preview=1" });
+    expect(response.statusCode).toBe(200);
+    expect(recordedIds).toEqual([]);
+  });
+
+  it("is not recorded again within the hour", async () => {
+    const { recordedIds } = await visit({ config: { ...activeConfig, lastTrafficAt: new Date() } });
+    expect(recordedIds).toEqual([]);
+  });
+
+  it("is not recorded for a disabled widget", async () => {
+    const { recordedIds } = await visit({ config: { ...activeConfig, status: "inactive" } });
+    expect(recordedIds).toEqual([]);
+  });
+
+  it("does not prevent the display of the widget when it cannot be saved", async () => {
+    const { response } = await visit({
+      recordTraffic: async () => {
+        throw new Error("not authorized on widget_config to execute command update");
+      },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).not.toHaveProperty("lastTrafficAt");
   });
 });
 
@@ -82,7 +142,10 @@ describe("GET /widgets/:publicId", () => {
       dispositifId: new ObjectId("6710f2a1c3d4e5f607182931"),
     };
     const app = buildTestApp({
-      widgetConfigRepository: { findByPublicId: async () => thumbnailConfig },
+      widgetConfigRepository: {
+        recordTraffic: async () => {},
+        findByPublicId: async () => thumbnailConfig,
+      },
     });
     const response = await app.inject({
       method: "GET",
@@ -106,6 +169,7 @@ describe("GET /widgets/:publicId", () => {
     };
     const app = buildTestApp({
       widgetConfigRepository: {
+        recordTraffic: async () => {},
         findByPublicId: async (publicId) => (publicId === inactive.publicId ? inactive : null),
       },
     });
@@ -130,6 +194,7 @@ describe("GET /widgets/:publicId/filters", () => {
     const themeLocales: string[] = [];
     const app = buildTestApp({
       widgetConfigRepository: {
+        recordTraffic: async () => {},
         findByPublicId: async () => ({ ...activeConfig, filterBarOptions: ["theme", "location"] }),
       },
       filterOptionsRepository: {
@@ -156,7 +221,10 @@ describe("GET /widgets/:publicId/filters", () => {
   it("answers the same 404 for an unknown, an inactive and a malformed widget", async () => {
     const inactive = { ...activeConfig, status: "inactive" as const };
     const app = buildTestApp({
-      widgetConfigRepository: { findByPublicId: async () => inactive },
+      widgetConfigRepository: {
+        recordTraffic: async () => {},
+        findByPublicId: async () => inactive,
+      },
     });
     const urls = [
       url,
@@ -233,7 +301,10 @@ describe("GET /widgets/:publicId/dispositifs", () => {
     };
     const appFor = (config: WidgetConfig, dispositifRepository: DispositifRepository) =>
       buildTestApp({
-        widgetConfigRepository: { findByPublicId: async () => config },
+        widgetConfigRepository: {
+          recordTraffic: async () => {},
+          findByPublicId: async () => config,
+        },
         dispositifRepository,
         keywordSearch: {
           findMatchedDispositifsIds: async (keyword) => {
@@ -335,6 +406,7 @@ describe("GET /widgets/:publicId/dispositifs", () => {
     const inactive = { ...activeConfig, status: "inactive" as const };
     const app = buildTestApp({
       widgetConfigRepository: {
+        recordTraffic: async () => {},
         findByPublicId: async (publicId) => (publicId === inactive.publicId ? inactive : null),
       },
     });
