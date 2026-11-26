@@ -44,6 +44,7 @@ const baseWidgetConfigShape = {
   status: z.enum(WIDGET_CONFIG_STATUSES),
   authorizedDomains: z.array(z.string()),
   externalTitle: z.string(),
+  lastTrafficAt: z.date().nullish(),
 };
 
 const listWidgetConfigSchema = z.object({

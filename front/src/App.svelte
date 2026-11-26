@@ -1,16 +1,17 @@
 <script lang="ts">
   import { fetchWidgetConfig, WidgetNotFoundError } from "./lib/api.js";
   import { isRtl } from "./lib/languages.js";
-  import { readInitialLocale, readPublicId } from "./lib/locale.js";
+  import { readInitialLocale, readPreviewFlag, readPublicId } from "./lib/locale.js";
   import { useRequest } from "./lib/useRequest.svelte.js";
   import ListWidget from "./ListWidget.svelte";
   import ThumbnailWidget from "./ThumbnailWidget.svelte";
 
+  const isPreview = readPreviewFlag(window.location.search);
   const publicId = readPublicId(window.location.pathname);
   let locale = $state(readInitialLocale(window.location.search));
 
   const request = useRequest((signal) =>
-    publicId ? fetchWidgetConfig(publicId, signal) : Promise.reject(new WidgetNotFoundError()),
+    publicId ? fetchWidgetConfig(publicId, isPreview, signal) : Promise.reject(new WidgetNotFoundError()),
   );
 
   const selectLocale = (code: string) => {

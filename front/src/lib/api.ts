@@ -59,8 +59,8 @@ export const getJson = async <T>(path: string, signal?: AbortSignal): Promise<T>
   return response.json() as Promise<T>;
 };
 
-export const fetchWidgetConfig = (publicId: string, signal?: AbortSignal) =>
-  getJson<PublicWidgetConfig>(`/widgets/${publicId}`, signal);
+export const fetchWidgetConfig = (publicId: string, preview: boolean, signal?: AbortSignal) =>
+  getJson<PublicWidgetConfig>(`/widgets/${publicId}${preview ? "?preview=1" : ""}`, signal);
 
 export const fetchThumbnail = async (publicId: string, locale: string, signal?: AbortSignal) => {
   const page = await getJson<{ items: DisplayedThumbnail[] }>(

@@ -7,7 +7,7 @@ partner site ──iframe──▶ front (Svelte) ──▶ backend (Fastify) �
                          /w/:publicId          /widgets/:publicId    widget_config, dispositifs, themes, structures
 ```
 
-The widget configs are written by the editor (`playground` repo) through the [karfur](https://github.com/refugies-info/karfur) API. This service only reads them.
+The widget configs are written by the editor (`playground` repo) through the [karfur](https://github.com/refugies-info/karfur) API. This service only reads them, except for their traffic.
 
 ## Status
 
@@ -18,6 +18,15 @@ The config of a widget depends on its `type`. A `thumbnail` widget only has the 
 The contents route of a `list` widget also takes the filters of the visitor, one parameter per option of `filterBarOptions` (repeat a parameter for several values): `search` (keyword, 100 characters max), `departments`, `themes` (ids), `publics`, `statuses`, `frenchLevels`, `ages` and `languages`. The values of a category are OR-ed, the categories are AND-ed, and they only narrow down the list of the widget (selected contents included, excluded ones stay excluded). A parameter whose option is not in the filter bar, or any parameter when `displayFilterBar` is off, is ignored; an invalid value is a 400. A keyword is searched in Algolia and the contents come in the order of its results instead of the sort of the widget. `total` and `pageCount` reflect the search and the filters.
 
 `GET /widgets/:publicId/filters?locale=fr` returns the values of the dropdowns of the filter bar, only for the enabled options: `departments` (a fixed list), `themes` (`id`, `name` in the locale with a French fallback, `color`) and `languages` (`code`, `name`, `localName`). The themes and the languages are read from MongoDB.
+
+## Traffic
+
+Loading the config of an active widget (`GET /widgets/:publicId`) is its traffic. It is saved in `widget_config`, once per hour and per widget at most:
+
+- `lastTrafficAt`: the last visit saved;
+- `activeSinceAt`: the start of the current activity period. It restarts with a visit that comes 3 days or more after the previous one.
+
+The editor shows the status of the widget from these dates, and a widget with traffic cannot be deleted. Its preview loads the page with `?preview=1`, which the front passes to the API so that it is not counted. Opening the url of a widget by hand counts. When the dates cannot be saved, the widget is displayed anyway and a warning is logged.
 
 ## Identifying a widget
 
@@ -98,7 +107,7 @@ The Cloud Build trigger of each environment runs [`cloudbuild.yaml`](cloudbuild.
 |---|---|
 | `_ENV` | `staging` or `production` (name of the Cloud Run service) |
 | `_SITE_URL` | Site of the environment, given to the front as `VITE_SITE_URL` |
-| `_MONGODB_VAR` | Secret Manager secret holding the `MONGODB_URI` (a read-only user per environment) |
+| `_MONGODB_VAR` | Secret Manager secret holding the `MONGODB_URI` (one user per environment: read-only, plus `update` on the `widget_config` collection for the traffic) |
 | `_ALGOLIA_INDEX_VAR` | Secret holding the Algolia index of the environment: the one of the site, `REACT_APP_ALGOLIA_INDEX_STG` or `REACT_APP_ALGOLIA_INDEX_PROD` |
 | `_EDITOR_ORIGINS` | Origin of the editor (`EDITOR_ORIGINS` of the service), e.g. `https://bomo.refugies.info`. Set it here, not on the service: `--set-env-vars` replaces the variables of the service at every deploy |
 | `_REGISTRY_URL`, `_REGISTRY`, `_REGION`, `_SA`, `_VPC_CONNECTOR` | Same as the karfur triggers |
