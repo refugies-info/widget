@@ -10,3 +10,6 @@ export const buildContentUrl = (
   locale === DEFAULT_LOCALE
     ? `${siteUrl}/${typeContenu}/${id}`
     : `${siteUrl}/${locale}/${TRANSLATED_PATH[typeContenu]}/${id}`;
+
+/** Some images are served by the site itself and stored as a path, e.g. "/images/cards/…". */
+export const buildImageUrl = (siteUrl: string, imageUrl: string) => new URL(imageUrl, siteUrl).href;
